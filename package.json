@@ -1,0 +1,23 @@
+{
+  "name": "morpheus-starter",
+  "private": true,
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "check": "turbo lint type-check",
+    "validate": "turbo lint type-check test",
+    "test": "turbo test",
+    "migrate:create": "pnpm --filter=@morpheus/api mikro-orm migration:create",
+    "migrate:up": "pnpm --filter=@morpheus/api mikro-orm migration:up"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

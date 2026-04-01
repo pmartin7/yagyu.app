@@ -1,0 +1,20 @@
+---
+description: After code changes, run pnpm check; retry with full permissions if sandbox blocks pnpm/eslint.
+alwaysApply: true
+---
+
+# Validation before finishing
+
+When you change **source code, config, or content** that can affect build or lint:
+
+1. **Run** `pnpm check` (lint + type-check) from the repo root **before**
+   reporting the task done. **Use the default sandbox** — do not request full
+   permissions preemptively.
+2. **If it fails** with lint or type errors, fix the issues, then run
+   `pnpm check` **once more**. If errors remain, report them and stop.
+3. **If the command fails** with sandbox or permission errors (EPERM, pnpm store
+   path), **re-run with full permissions** instead of asking the user.
+4. When the user asked for tests or "full validate", run **`pnpm validate`**
+   (check + tests) instead of only `pnpm check`.
+
+Do not skip validation because the change "looks small."
