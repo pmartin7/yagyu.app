@@ -2,7 +2,7 @@
 
 **Ship your AI product in a weekend, not a quarter.**
 
-Forge is a public GitHub repository that gives startup founders a production-grade
+Morpheus is a public GitHub repository that gives startup founders a production-grade
 full-stack application skeleton — complete with AI chat, authentication, a database,
 and an autonomous agent-powered development environment — so you can go from idea to
 deployed prototype in a single sitting.
@@ -13,7 +13,7 @@ Fork it. Run one command. Answer a few questions. You're live.
 
 ## Table of Contents
 
-- [Why Forge Exists](#why-forge-exists)
+- [Why Morpheus Exists](#why-morpheus-exists)
 - [What You Get](#what-you-get)
 - [The Thesis](#the-thesis)
 - [Prerequisites](#prerequisites)
@@ -28,7 +28,7 @@ Fork it. Run one command. Answer a few questions. You're live.
 
 ---
 
-## Why Forge Exists
+## Why Morpheus Exists
 
 Most founders who "vibe code" — building with AI assistants rather than writing every
 line by hand — hit the same wall: the AI produces code that works in isolation but
@@ -36,7 +36,7 @@ collapses under its own weight. No structure. No conventions. No validation. Thr
 weeks in, the codebase is a maze of inconsistent patterns, duplicate logic, and
 mysterious bugs that the AI can't fix because it can't understand the mess it created.
 
-Forge solves this by giving you the scaffolding, guardrails, and agent harness
+Morpheus solves this by giving you the scaffolding, guardrails, and agent harness
 **before** you write a single line of product code. It's the difference between
 building on a foundation and building on sand.
 
@@ -85,7 +85,7 @@ AI coding agents don't invent architecture — they replicate whatever patterns 
 find. If your repo has inconsistent conventions, the agent will produce more
 inconsistency. If it has clean, documented patterns, the agent will follow them.
 
-Forge gives agents a single canonical pattern for every concern: one validation
+Morpheus gives agents a single canonical pattern for every concern: one validation
 system (Zod), one component style (shadcn), one logging library (Pino), one test
 runner (Vitest), one way to define entities, one way to handle auth. Agents don't
 have to guess. They read the docs, follow the pattern, and produce code that fits.
@@ -105,7 +105,7 @@ commands after every change. A broken build gets caught in seconds, not days.
 
 ### YAGNI, relentlessly
 
-Forge includes exactly what you need to ship a working AI product prototype. No admin
+Morpheus includes exactly what you need to ship a working AI product prototype. No admin
 panels, no role-based access control, no pagination, no dark mode, no
 internationalization. Those are real features for real products — add them when you
 need them, using the agent skills that are already wired up.
@@ -159,7 +159,7 @@ runs tests, and asks you questions when it needs input.
 
 ### Step 1: Fork and clone
 
-1. Go to the Forge repository on GitHub
+1. Go to the Morpheus repository on GitHub
 2. Click **Fork** (top right) to create your own copy
 3. Open a terminal and clone your fork:
 
@@ -549,7 +549,7 @@ upload endpoints and a File entity in the database.
 
 **Q: Do I need to know how to code?**
 
-Not really. Forge is designed for founders who work primarily through AI coding
+Not really. Morpheus is designed for founders who work primarily through AI coding
 assistants. You describe what you want in plain English, and the agent implements
 it. That said, you'll benefit from understanding basic concepts like "database,"
 "API," and "deploy" — the same way you'd benefit from understanding "equity" and
@@ -622,7 +622,7 @@ the team.
 
 ## Credits
 
-Forge was built by [Pierre Martin](https://pierre-martin.com), drawing on patterns
+Morpheus was built by [Pierre Martin](https://pierre-martin.com), drawing on patterns
 proven across production deployments at companies building with AI. The agent
 operating system is informed by [OpenAI's harness engineering](https://openai.com/index/harness-engineering/)
 principles and years of running autonomous coding workflows.
