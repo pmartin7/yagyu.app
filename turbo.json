@@ -4,7 +4,8 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
-      "cache": true
+      "cache": true,
+      "env": ["VITE_*", "NODE_ENV"]
     },
     "dev": {
       "persistent": true,

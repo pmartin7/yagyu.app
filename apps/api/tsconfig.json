@@ -2,6 +2,10 @@
   "extends": "@morpheus/tsconfig/nestjs.json",
   "compilerOptions": {
     "baseUrl": ".",
+    // outDir in the shared base config resolves relative to packages/tsconfig,
+    // so both must be pinned here for output to land in apps/api/dist
+    "outDir": "./dist",
+    "rootDir": "./src",
     "paths": {
       "@/*": ["src/*"]
     }
