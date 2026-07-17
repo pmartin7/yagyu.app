@@ -105,9 +105,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@ai-sdk/react':
-        specifier: ^0.0.43
-        version: 0.0.43(react@18.3.1)(zod@3.25.76)
       '@radix-ui/react-slot':
         specifier: ^1.0.2
         version: 1.2.4(@types/react@18.3.28)(react@18.3.1)
@@ -244,15 +241,6 @@ packages:
     peerDependencies:
       zod: ^3.0.0
 
-  '@ai-sdk/provider-utils@1.0.11':
-    resolution: {integrity: sha512-u3BmXKg4MeA5s5eN9bWP4ybGJuOTRC2H0YacMCag5fcZ14S6kfukGE8MzRsGU2wTv6A16zLY0XqVvwcqe13mUA==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.0.0
-    peerDependenciesMeta:
-      zod:
-        optional: true
-
   '@ai-sdk/provider-utils@1.0.22':
     resolution: {integrity: sha512-YHK2rpj++wnLVc9vPGzGFP3Pjeld2MwhKinetA0zKXOoHAT/Jit5O8kZsxcSlJPu9wvcGT1UGZEjZrtO7PfFOQ==}
     engines: {node: '>=18'}
@@ -288,25 +276,9 @@ packages:
     resolution: {integrity: sha512-f9j+P5yYRkqKFHxvWae5FI0j6nqROPCoPnMkpc2hc2vC7vKjqzrxBJucD8rpSaUjqiBnY/QuRJ0QeV717Uz5tg==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/provider@0.0.19':
-    resolution: {integrity: sha512-WXyyJ0Fqg0OHzUQ/spem4jRFPq+NkYB8YNTVbSQrE+Rpxtm7DqK1x9MrHtIEhoikCMg9wBOCbm7HuMnfsIR5GA==}
-    engines: {node: '>=18'}
-
   '@ai-sdk/provider@0.0.26':
     resolution: {integrity: sha512-dQkfBDs2lTYpKM8389oopPdQgIU007GQyCbuPPrV+K6MtSII3HBfE0stUIMXUb44L+LK1t6GXPP7wjSzjO6uKg==}
     engines: {node: '>=18'}
-
-  '@ai-sdk/react@0.0.43':
-    resolution: {integrity: sha512-maWuV9529tIVVST9iXgnxBWUoM5Z8DW0lyrMYnsaLJAZ4kostt+PbqJjhy6eAQPzmXGcu4+OdgT1v1ZNCZR4+Q==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      react: ^18 || ^19
-      zod: ^3.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      zod:
-        optional: true
 
   '@ai-sdk/react@0.0.70':
     resolution: {integrity: sha512-GnwbtjW4/4z7MleLiW+TOZC2M29eCg1tOUpuEiYFMmFNZK8mkrqM0PFZMo6UsYeUYMWqEOOcPOU9OQVJMJh7IQ==}
@@ -336,15 +308,6 @@ packages:
       svelte: ^3.0.0 || ^4.0.0 || ^5.0.0
     peerDependenciesMeta:
       svelte:
-        optional: true
-
-  '@ai-sdk/ui-utils@0.0.31':
-    resolution: {integrity: sha512-PA1mI+WC69Bc8JCTDOXwhLv9OAfocex/d+MRtQjfuWE6jTBjkBMa6davw+JjN7Vcp6zP0JLQG6gd7n6MnkFepQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.0.0
-    peerDependenciesMeta:
-      zod:
         optional: true
 
   '@ai-sdk/ui-utils@0.0.50':
@@ -2133,9 +2096,6 @@ packages:
   cli-width@4.1.0:
     resolution: {integrity: sha512-ouuZd4/dm2Sw5Gmqy6bGyNNNe1qt9RpmxveLSO7KcgsTnU7RXfsw+/bukWGo1abgBiMAic068rclZsO4IWmmxQ==}
     engines: {node: '>= 12'}
-
-  client-only@0.0.1:
-    resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
 
   cliui@8.0.1:
     resolution: {integrity: sha512-BSeNnyus75C4//NQ9gQt1/csTXyo/8Sb+afLAkzAptFuMsod9HFokGNudZpi/oQV73hnVK+sR+5PVRMd+Dr7YQ==}
@@ -4295,11 +4255,6 @@ packages:
     resolution: {integrity: sha512-QjvU7EFemf6mRzdMGlAFttMWtAAVXrax61SZYHdkD6yoVGQ89VeyKfZD4H1JrV1WLmJBxWhFch9H6ig/87VGjw==}
     engines: {node: '>=18'}
 
-  swr@2.2.5:
-    resolution: {integrity: sha512-QtxqyclFeAsxEUeZIYmsaQ0UjimSq1RZ9Un7I68/0ClKK/U3LoyQunwkQfJZr2fc22DfIXLNDc2wFyTEikCUpg==}
-    peerDependencies:
-      react: ^16.11.0 || ^17.0.0 || ^18.0.0
-
   swr@2.4.1:
     resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
     peerDependencies:
@@ -4812,11 +4767,6 @@ packages:
   zimmerframe@1.1.4:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
-  zod-to-json-schema@3.22.5:
-    resolution: {integrity: sha512-+akaPo6a0zpVCCseDed504KBJUQpEW5QZw7RMneNmKw+fGaML1Z9tUNLnHHAC8x6dzVRO1eB2oEMyZRnuBZg7Q==}
-    peerDependencies:
-      zod: ^3.22.4
-
   zod-to-json-schema@3.25.2:
     resolution: {integrity: sha512-O/PgfnpT1xKSDeQYSCfRI5Gy3hPf91mKVDuYLUHZJMiDFptvP41MSnWofm8dnCm0256ZNfZIM7DSzuSMAFnjHA==}
     peerDependencies:
@@ -4839,15 +4789,6 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 0.0.16
       '@ai-sdk/provider-utils': 1.0.8(zod@3.25.76)
-      zod: 3.25.76
-
-  '@ai-sdk/provider-utils@1.0.11(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 0.0.19
-      eventsource-parser: 1.1.2
-      nanoid: 3.3.6
-      secure-json-parse: 2.7.0
-    optionalDependencies:
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@1.0.22(zod@3.25.76)':
@@ -4885,22 +4826,9 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@0.0.19':
-    dependencies:
-      json-schema: 0.4.0
-
   '@ai-sdk/provider@0.0.26':
     dependencies:
       json-schema: 0.4.0
-
-  '@ai-sdk/react@0.0.43(react@18.3.1)(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider-utils': 1.0.11(zod@3.25.76)
-      '@ai-sdk/ui-utils': 0.0.31(zod@3.25.76)
-      swr: 2.2.5(react@18.3.1)
-    optionalDependencies:
-      react: 18.3.1
-      zod: 3.25.76
 
   '@ai-sdk/react@0.0.70(react@18.3.1)(zod@3.25.76)':
     dependencies:
@@ -4928,16 +4856,6 @@ snapshots:
       svelte: 5.55.1
     transitivePeerDependencies:
       - zod
-
-  '@ai-sdk/ui-utils@0.0.31(zod@3.25.76)':
-    dependencies:
-      '@ai-sdk/provider': 0.0.19
-      '@ai-sdk/provider-utils': 1.0.11(zod@3.25.76)
-      json-schema: 0.4.0
-      secure-json-parse: 2.7.0
-      zod-to-json-schema: 3.22.5(zod@3.25.76)
-    optionalDependencies:
-      zod: 3.25.76
 
   '@ai-sdk/ui-utils@0.0.50(zod@3.25.76)':
     dependencies:
@@ -6972,8 +6890,6 @@ snapshots:
   cli-width@3.0.0: {}
 
   cli-width@4.1.0: {}
-
-  client-only@0.0.1: {}
 
   cliui@8.0.1:
     dependencies:
@@ -9460,12 +9376,6 @@ snapshots:
       magic-string: 0.30.21
       zimmerframe: 1.1.4
 
-  swr@2.2.5(react@18.3.1):
-    dependencies:
-      client-only: 0.0.1
-      react: 18.3.1
-      use-sync-external-store: 1.6.0(react@18.3.1)
-
   swr@2.4.1(react@18.3.1):
     dependencies:
       dequal: 2.0.3
@@ -10013,10 +9923,6 @@ snapshots:
   yocto-queue@1.2.2: {}
 
   zimmerframe@1.1.4: {}
-
-  zod-to-json-schema@3.22.5(zod@3.25.76):
-    dependencies:
-      zod: 3.25.76
 
   zod-to-json-schema@3.25.2(zod@3.25.76):
     dependencies:

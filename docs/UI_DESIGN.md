@@ -9,15 +9,16 @@ spacing, and component patterns.
 - mobile-first
 - content over chrome
 - every element earns its place
-- {BRAND_ADJECTIVE_1}, {BRAND_ADJECTIVE_2} (set by init-project)
+- slick yet quirky, geeky — the spirit of the Samurai embodied
+- calm and focused: the UI reduces inbox anxiety, never adds to it
 
 ## 2) Color Palette
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| primary | {PRIMARY_COLOR:#3B82F6} | interactive elements only |
-| surface | {SURFACE_COLOR:#FAFAFA} | page background |
-| surface-alt | {SURFACE_ALT:#F1F5F9} | section alternation |
+| primary | #4F46E5 | interactive elements only — aizome (Japanese indigo) |
+| surface | #FAFAFA | page background |
+| surface-alt | #F1F5F9 | section alternation |
 | text | #1A1B1E | body text |
 | text-secondary | #64748B | metadata, captions |
 | destructive | #EF4444 | error states |

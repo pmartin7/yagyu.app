@@ -4,11 +4,36 @@ Entry point for agents. Read this first, then drill into docs relevant to your t
 
 ## 1) Product Context
 
-This is an uninitialized Forge starter pack. Run the `init-project` skill to
-configure it for your product.
+**Product:** yagyu.app
 
-After init, this section will contain: product description, target users, domain
-glossary, and editorial positioning.
+**Description:** A mobile app that connects multiple email accounts, triages and
+categorizes incoming mail with AI, surfaces what needs immediate action with
+suggested context and recommended follow-ups, and turns emails into a manageable,
+editable todo list. Use the Force of the Yagyu to cut through the noise, create
+Zen, Focus, Power, Magic and Clarity.
+
+**Target user:** Professionals and knowledge workers who juggle several email
+accounts and are overwhelmed by their inbox.
+
+**Tone:** Clean, simple, modern, slick yet quirky and geeky — with the spirit of
+the Samurai embodied.
+
+### Domain Glossary
+
+- **Email Account** — a connected Gmail/Outlook mailbox.
+- **Triage** — AI scoring of an email's urgency + whether it needs action.
+- **Dynamic Category** — an AI-created grouping that evolves as mail arrives.
+- **Needs Action** — emails requiring a user response/decision.
+- **AI Context** — a short AI summary explaining why an email matters.
+- **Recommended Action** — AI-suggested reply/follow-up.
+- **Todo** — an actionable item, auto-generated from an email or added manually.
+- **Follow-up** — a todo tied to awaiting/sending a response.
+
+### Editorial Positioning
+
+Calm, focused, action-oriented; reduces the anxiety of forgetting something in
+your inbox. Gamified to show how well you are doing at embodying the Zen and
+power of the Yagyu.
 
 ## 2) Repository Structure
 

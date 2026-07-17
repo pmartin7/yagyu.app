@@ -22,3 +22,5 @@ migrations/*.js
 # editor
 .DS_Store
 *.log
+.vercel
+.env*

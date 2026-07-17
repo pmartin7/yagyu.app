@@ -18,7 +18,7 @@ export function LoginPage(): JSX.Element {
     setLoading(true);
     try {
       await signIn(email, password);
-      navigate('/chat');
+      navigate('/');
     } catch {
       setError('Invalid email or password.');
     } finally {
