@@ -62,6 +62,8 @@ pnpm build
 pnpm check        # lint + type-check
 pnpm validate     # check + tests
 pnpm test
+pnpm validate:local   # boot + drive web app headlessly, screenshots → harness/artifacts/
+pnpm validate:deploy  # verify Vercel deployments are READY and live site renders
 ```
 
 ## 4) Stack
@@ -131,6 +133,7 @@ pnpm test
 | create-pr-description | /create-pr | PR description from git diff |
 | add-vector-store | /add-vector-store | Wire Turbopuffer vector search |
 | add-blob-storage | /add-blob-storage | Wire Vercel Blob file storage |
+| validate-app | /validate-app | Visual local validation + deployment verification harnesses |
 
 ## 10) Anti-Patterns
 

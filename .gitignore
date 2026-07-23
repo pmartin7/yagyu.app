@@ -24,3 +24,6 @@ migrations/*.js
 *.log
 .vercel
 .env*
+
+# harness output (screenshots)
+harness/artifacts/
