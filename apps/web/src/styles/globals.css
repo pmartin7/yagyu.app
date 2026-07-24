@@ -1,13 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3B82F6;
-  --color-primary-foreground: #ffffff;
-  --color-surface: #FAFAFA;
-  --color-surface-alt: #F1F5F9;
-  --color-destructive: #EF4444;
+  /* Sumi & Washi palette — see docs/UI_DESIGN.md */
+  --color-surface: #FAF8F3; /* kinari — warm paper, page background */
+  --color-surface-alt: #F2EDE3; /* oat — section alternation */
+  --color-card: #FFFDF9; /* warm white — card surfaces */
+  --color-ink: #1C1E26; /* sumi ink — body + headings */
+  --color-ink-muted: #5C5F68; /* stone — secondary text (≥4.5:1 on oat) */
+  --color-ink-section: #16181F; /* near-black sumi — single dark accent band */
+  --color-primary: #3E4784; /* aizome indigo — interactive elements only */
+  --color-primary-hover: #333A6E;
+  --color-seal: #C73E2E; /* vermilion — hanko mark + ≤1 accent per screen, never CTAs */
+  --color-destructive: #B42318; /* error states only */
+  --color-border: #E5DFD2; /* warm hairline — cards, nav, dividers */
+  --color-border-strong: #9C9280; /* form inputs — ≥3:1 against card */
 
-  --font-family-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Georgia', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Decorative kanji only — Fraunces has no CJK glyphs */
+  --font-kanji: 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif JP', serif;
 }
 
 * {
@@ -15,8 +27,8 @@
 }
 
 body {
-  font-family: var(--font-family-sans);
+  font-family: var(--font-sans);
   background-color: var(--color-surface);
-  color: #1A1B1E;
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
 }
