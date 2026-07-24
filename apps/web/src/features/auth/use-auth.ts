@@ -1,6 +1,10 @@
 import { useContext } from 'react';
 import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  sendEmailVerification,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut as firebaseSignOut,
 } from 'firebase/auth';
 import { getFirebaseAuth } from '../../lib/firebase.js';
@@ -17,8 +21,27 @@ function requireAuth() {
 export function useAuth() {
   const { user, loading } = useContext(AuthContext);
 
-  const signIn = (email: string, password: string) =>
-    signInWithEmailAndPassword(requireAuth(), email, password);
+  const signIn = async (email: string, password: string) => {
+    const credential = await signInWithEmailAndPassword(requireAuth(), email, password);
+    if (!credential.user.emailVerified) {
+      await firebaseSignOut(requireAuth());
+      throw new Error('email-not-verified');
+    }
+    return credential;
+  };
+
+  const signUp = async (email: string, password: string) => {
+    const auth = requireAuth();
+    const credential = await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      await sendEmailVerification(credential.user, { url: `${window.location.origin}/login` });
+    } finally {
+      await firebaseSignOut(auth);
+    }
+    return credential;
+  };
+
+  const signInWithGoogle = () => signInWithPopup(requireAuth(), new GoogleAuthProvider());
 
   const signOut = () => firebaseSignOut(requireAuth());
 
@@ -27,5 +50,5 @@ export function useAuth() {
     return user.getIdToken();
   };
 
-  return { user, loading, signIn, signOut, getToken };
+  return { user, loading, signIn, signUp, signInWithGoogle, signOut, getToken };
 }
