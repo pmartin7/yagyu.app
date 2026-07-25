@@ -15,9 +15,11 @@
       "cache": true
     },
     "type-check": {
+      "dependsOn": ["^build"],
       "cache": true
     },
     "test": {
+      "dependsOn": ["^build"],
       "cache": true,
       "outputs": ["coverage/**"]
     }
