@@ -46,6 +46,8 @@ packages/shared        Zod schemas + inferred TypeScript types
 packages/tsconfig      Shared TypeScript base configs
 packages/eslint-config Shared ESLint flat configs
 docs/                  Style guide, testing, logging, UI design
+.github/workflows/     CI (format+lint+type-check+test) + DB migration pipelines
+.husky/                Pre-commit hook (lint-staged: eslint --fix + prettier)
 .agents/skills/        Agent skills (workflows) — source of truth
 .agents/rules/         Always-on agent rules — source of truth
 .agents/agents/        Agent role definitions
@@ -62,6 +64,7 @@ pnpm build
 pnpm check        # lint + type-check
 pnpm validate     # check + tests
 pnpm test
+pnpm format       # prettier --write (also runs on save + pre-commit + CI check)
 pnpm validate:local   # boot + drive web app headlessly, screenshots → harness/artifacts/
 pnpm validate:deploy  # verify Vercel deployments are READY and live site renders
 ```
