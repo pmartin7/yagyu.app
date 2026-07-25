@@ -81,8 +81,10 @@ export class EmailAccountsService {
       const refreshToken = decryptToken(account.encryptedRefreshToken, this.tokenEncryptionKey);
       await this.oauthClient.revokeToken(refreshToken);
     } catch (err) {
+      // Log message only — gaxios errors carry the request config, which
+      // includes the plaintext refresh token being revoked
       this.logger.warn(
-        { accountId: account.id, err },
+        { accountId: account.id, error: err instanceof Error ? err.message : String(err) },
         'Failed to revoke Google token during unlink',
       );
     }

@@ -37,6 +37,13 @@ export class FirebaseAuthGuard implements CanActivate, OnModuleInit {
       throw new UnauthorizedException('Invalid or expired Firebase token');
     }
 
+    // Never trust an unverified email claim: it allows squatting someone
+    // else's address (unique email column) and blocking their real signup.
+    // The web app blocks unverified sign-ins too; Google SSO is always verified.
+    if (decoded.email_verified !== true) {
+      throw new UnauthorizedException('Email address not verified');
+    }
+
     const user = await this.usersService.getOrCreate(
       decoded.uid,
       decoded['email'] ?? '',

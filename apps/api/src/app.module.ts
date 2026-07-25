@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import mikroOrmConfig from './mikro-orm.config.js';
 import { UsersModule } from './users/users.module.js';
@@ -20,10 +22,14 @@ import { HealthModule } from './health/health.module.js';
         redact: ['req.headers.authorization'],
       },
     }),
+    // In-memory, per-instance on serverless — a coarse safety net, not a
+    // distributed limiter
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
     UsersModule,
     EmailAccountsModule,
     AiModule,
     HealthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
