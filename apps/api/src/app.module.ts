@@ -3,6 +3,7 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { LoggerModule } from 'nestjs-pino';
 import mikroOrmConfig from './mikro-orm.config.js';
 import { UsersModule } from './users/users.module.js';
+import { EmailAccountsModule } from './email-accounts/email-accounts.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { HealthModule } from './health/health.module.js';
 
@@ -20,6 +21,7 @@ import { HealthModule } from './health/health.module.js';
       },
     }),
     UsersModule,
+    EmailAccountsModule,
     AiModule,
     HealthModule,
   ],
