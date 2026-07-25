@@ -21,8 +21,9 @@ const WEB_URL = 'http://localhost:5173';
 const DEFAULT_ROUTES = ['/', '/login'];
 const BOOT_TIMEOUT_MS = 60_000;
 
-const extraRoutes = process.argv
-  .flatMap((a, i, all) => (a === '--route' && all[i + 1] ? [all[i + 1]] : []));
+const extraRoutes = process.argv.flatMap((a, i, all) =>
+  a === '--route' && all[i + 1] ? [all[i + 1]] : [],
+);
 const routes = [...new Set([...DEFAULT_ROUTES, ...extraRoutes])];
 
 async function isUp(url) {
@@ -72,7 +73,9 @@ async function main() {
 
   const reusedServer = await isUp(WEB_URL);
   const server = reusedServer ? null : await bootDevServer();
-  console.log(`✓ web app is up at ${WEB_URL} (${reusedServer ? 'reused running server' : 'booted by harness'})`);
+  console.log(
+    `✓ web app is up at ${WEB_URL} (${reusedServer ? 'reused running server' : 'booted by harness'})`,
+  );
 
   let browser;
   try {
@@ -98,7 +101,9 @@ async function main() {
       const onRequestFailed = (req) => {
         // Aborted requests (e.g. HMR reconnects) are noise, not failures
         if (req.failure()?.errorText !== 'net::ERR_ABORTED') {
-          problems.push(`request failed: ${req.method()} ${req.url()} (${req.failure()?.errorText})`);
+          problems.push(
+            `request failed: ${req.method()} ${req.url()} (${req.failure()?.errorText})`,
+          );
         }
       };
       page.on('console', onConsole);

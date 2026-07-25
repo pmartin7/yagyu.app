@@ -20,12 +20,14 @@ Use the AskQuestion tool to collect:
 ## Phase 2 — Generate AGENTS.md
 
 Rewrite `AGENTS.md` with:
+
 - Section 1 (Product Context): product description, target user, domain glossary (5–10 key terms), editorial positioning
 - Keep all other sections exactly as-is
 
 ## Phase 3 — Generate ARCHITECTURE.md
 
 Rewrite `ARCHITECTURE.md` with:
+
 - Route map updated for the product's actual pages
 - Entity model updated if product needs additional entities
 - Data flow section updated for the actual features
@@ -34,6 +36,7 @@ Rewrite `ARCHITECTURE.md` with:
 ## Phase 4 — Customize UI_DESIGN.md (optional)
 
 If the founder wants brand customization, ask for:
+
 - Primary brand color (hex)
 - Two brand adjectives (e.g. "precise, minimal")
 - Any font preferences
@@ -76,6 +79,7 @@ vercel deploy --prod
 ## Phase 6 — Handoff
 
 Print:
+
 1. Live URL from Vercel
 2. GitHub repo URL
 3. List of available skills with triggers (from AGENTS.md section 9)

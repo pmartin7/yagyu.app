@@ -32,9 +32,14 @@ const TITLE_MARKER = 'yagyu.app';
 function loadVercelCredentials() {
   try {
     const { token } = JSON.parse(
-      readFileSync(resolve(homedir(), 'Library/Application Support/com.vercel.cli/auth.json'), 'utf8'),
+      readFileSync(
+        resolve(homedir(), 'Library/Application Support/com.vercel.cli/auth.json'),
+        'utf8',
+      ),
     );
-    const { projectId, orgId } = JSON.parse(readFileSync(resolve(ROOT, '.vercel/project.json'), 'utf8'));
+    const { projectId, orgId } = JSON.parse(
+      readFileSync(resolve(ROOT, '.vercel/project.json'), 'utf8'),
+    );
     return { token, projectId, orgId };
   } catch {
     throw Object.assign(
@@ -59,9 +64,7 @@ async function latestDeployment({ token, projectId, orgId }, { target, branch })
     );
   }
   const { deployments } = await res.json();
-  const list = branch
-    ? deployments.filter((d) => d.meta?.githubCommitRef === branch)
-    : deployments;
+  const list = branch ? deployments.filter((d) => d.meta?.githubCommitRef === branch) : deployments;
   return list[0] ?? null;
 }
 
@@ -88,7 +91,9 @@ async function main() {
       console.log(`PASS ${label}: latest deployment ${describeDeployment(dep)}`);
     } else if (dep.state === 'BUILDING' || dep.state === 'QUEUED' || dep.state === 'INITIALIZING') {
       failures.push(`${label}: deployment still ${dep.state} — wait and re-run`);
-      console.log(`FAIL ${label}: ${describeDeployment(dep)} — still in progress, re-run in ~1 minute`);
+      console.log(
+        `FAIL ${label}: ${describeDeployment(dep)} — still in progress, re-run in ~1 minute`,
+      );
     } else {
       failures.push(`${label}: deployment state ${dep.state}`);
       console.log(
@@ -104,15 +109,23 @@ async function main() {
       if (res.status === 200) {
         const html = await res.text();
         if (!html.includes(TITLE_MARKER)) {
-          failures.push(`${url}: 200 but response does not look like the app (missing "${TITLE_MARKER}")`);
+          failures.push(
+            `${url}: 200 but response does not look like the app (missing "${TITLE_MARKER}")`,
+          );
           console.log(`FAIL ${url}: 200 but unexpected content`);
           return;
         }
         console.log(`PASS ${url}: 200, app shell served`);
         return;
       }
-      if (allowSso && res.status === 302 && res.headers.get('location')?.includes('vercel.com/sso')) {
-        console.log(`PASS ${url}: protected by Vercel SSO (expected while deployment protection is on)`);
+      if (
+        allowSso &&
+        res.status === 302 &&
+        res.headers.get('location')?.includes('vercel.com/sso')
+      ) {
+        console.log(
+          `PASS ${url}: protected by Vercel SSO (expected while deployment protection is on)`,
+        );
         return;
       }
       if (res.status >= 300 && res.status < 400) {
@@ -156,7 +169,9 @@ async function main() {
       await page.screenshot({ path: shot, fullPage: true });
       if (rootContent === '') {
         failures.push('production renders a blank page (#root empty)');
-        console.log(`FAIL production visual: blank page. Console errors: ${consoleErrors.join(' | ') || 'none'}`);
+        console.log(
+          `FAIL production visual: blank page. Console errors: ${consoleErrors.join(' | ') || 'none'}`,
+        );
       } else if (consoleErrors.length > 0) {
         failures.push(`production console errors: ${consoleErrors.join(' | ')}`);
         console.log(`FAIL production visual: console errors — ${consoleErrors.join(' | ')}`);
@@ -167,7 +182,9 @@ async function main() {
       await browser.close();
     }
   } catch {
-    console.log('WARN visual check skipped: playwright not installed (run `pnpm install && pnpm exec playwright install chromium`)');
+    console.log(
+      'WARN visual check skipped: playwright not installed (run `pnpm install && pnpm exec playwright install chromium`)',
+    );
   }
 
   console.log(

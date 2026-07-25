@@ -34,6 +34,7 @@ pnpm validate:deploy
 ```
 
 What it does:
+
 1. Vercel API — latest production deployment and latest `staging`-branch
    deployment must be `READY` (fails with an `npx vercel inspect --logs`
    remediation command if errored, or "re-run in a minute" if still building).

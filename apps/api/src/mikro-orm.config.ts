@@ -8,9 +8,7 @@ export default defineConfig({
   clientUrl,
   // MikroORM drops query params from clientUrl, so sslmode=require must be
   // passed to the pg driver explicitly or Neon rejects the connection.
-  driverOptions: clientUrl?.includes('sslmode=require')
-    ? { connection: { ssl: true } }
-    : undefined,
+  driverOptions: clientUrl?.includes('sslmode=require') ? { connection: { ssl: true } } : undefined,
   entities: ['./dist/**/*.entity.js'],
   entitiesTs: ['./src/**/*.entity.ts'],
   extensions: [Migrator],

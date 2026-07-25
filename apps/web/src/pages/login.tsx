@@ -90,8 +90,8 @@ export function LoginPage(): JSX.Element {
               Check your email
             </h1>
             <p className="text-ink-muted leading-relaxed">
-              We sent a verification link to <span className="text-ink">{email}</span>. Verify
-              your address, then sign in.
+              We sent a verification link to <span className="text-ink">{email}</span>. Verify your
+              address, then sign in.
             </p>
             <Button variant="ghost" className="mt-2" onClick={() => setMode('signin')}>
               Back to sign in

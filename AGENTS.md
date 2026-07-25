@@ -120,24 +120,25 @@ pnpm validate:deploy  # verify Vercel deployments are READY and live site render
 
 ## 9) Available Skills
 
-| Skill | Trigger | Purpose |
-|-------|---------|---------|
-| init-project | /init-project | Conversational setup wizard |
-| research-feature | /research-feature | Research + simplify + options + staff review |
-| plan-feature | /plan-feature | Create implementation plan from research |
-| build-plan | /build-plan | Implement plan with parallel subagents |
-| fix-bug | /fix-bug | Diagnose bugs via hypotheses + ninja review |
-| generate-test | /generate-test | Independent P0 test writing |
-| design | /design | UI design / review + staff-designer |
-| add-logs | /add-logs | Insert structured logging |
-| create-pr-description | /create-pr | PR description from git diff |
-| add-vector-store | /add-vector-store | Wire Turbopuffer vector search |
-| add-blob-storage | /add-blob-storage | Wire Vercel Blob file storage |
-| validate-app | /validate-app | Visual local validation + deployment verification harnesses |
+| Skill                 | Trigger           | Purpose                                                     |
+| --------------------- | ----------------- | ----------------------------------------------------------- |
+| init-project          | /init-project     | Conversational setup wizard                                 |
+| research-feature      | /research-feature | Research + simplify + options + staff review                |
+| plan-feature          | /plan-feature     | Create implementation plan from research                    |
+| build-plan            | /build-plan       | Implement plan with parallel subagents                      |
+| fix-bug               | /fix-bug          | Diagnose bugs via hypotheses + ninja review                 |
+| generate-test         | /generate-test    | Independent P0 test writing                                 |
+| design                | /design           | UI design / review + staff-designer                         |
+| add-logs              | /add-logs         | Insert structured logging                                   |
+| create-pr-description | /create-pr        | PR description from git diff                                |
+| add-vector-store      | /add-vector-store | Wire Turbopuffer vector search                              |
+| add-blob-storage      | /add-blob-storage | Wire Vercel Blob file storage                               |
+| validate-app          | /validate-app     | Visual local validation + deployment verification harnesses |
 
 ## 10) Anti-Patterns
 
 Do not:
+
 - introduce a second UI system or component library
 - mix validation systems (Zod only)
 - add default exports

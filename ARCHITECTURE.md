@@ -21,22 +21,22 @@ actions (Anthropic / Claude).
 
 ### Screen Map (apps/mobile — implemented later)
 
-| Screen | Purpose |
-|--------|---------|
-| Onboarding | Connect email accounts (Gmail/Outlook OAuth) |
-| Triage feed | Prioritized inbox across all accounts |
-| Needs Action | Emails requiring a response/decision |
-| Message detail | AI summary (AI Context) + recommended actions |
-| Categories | View/manage dynamic + manual categories, recategorize |
-| Todos | List, add, edit, complete, snooze, recategorize |
-| Settings | Accounts, notifications |
+| Screen         | Purpose                                               |
+| -------------- | ----------------------------------------------------- |
+| Onboarding     | Connect email accounts (Gmail/Outlook OAuth)          |
+| Triage feed    | Prioritized inbox across all accounts                 |
+| Needs Action   | Emails requiring a response/decision                  |
+| Message detail | AI summary (AI Context) + recommended actions         |
+| Categories     | View/manage dynamic + manual categories, recategorize |
+| Todos          | List, add, edit, complete, snooze, recategorize       |
+| Settings       | Accounts, notifications                               |
 
 ### Route Map (apps/web — marketing/landing)
 
-| Route | Page | Auth |
-|-------|------|------|
-| / | Landing page | No |
-| /login | Firebase auth | No |
+| Route  | Page          | Auth |
+| ------ | ------------- | ---- |
+| /      | Landing page  | No   |
+| /login | Firebase auth | No   |
 
 ### Entity Model
 
