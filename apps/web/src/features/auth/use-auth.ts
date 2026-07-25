@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useCallback, useContext } from 'react';
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -45,10 +45,13 @@ export function useAuth() {
 
   const signOut = () => firebaseSignOut(requireAuth());
 
-  const getToken = async (): Promise<string | null> => {
+  // Stable reference: consumers (e.g. useEmailAccounts) depend on this inside
+  // useCallback/useEffect chains — a new function every render would re-fire
+  // effects on every render and loop.
+  const getToken = useCallback(async (): Promise<string | null> => {
     if (!user) return null;
     return user.getIdToken();
-  };
+  }, [user]);
 
   return { user, loading, signIn, signUp, signInWithGoogle, signOut, getToken };
 }
