@@ -62,8 +62,8 @@ export async function requestGmailAuthCode(): Promise<string> {
   await loadGisScript();
 
   return new Promise<string>((resolve, reject) => {
-    window.google!.accounts.oauth2
-      .initCodeClient({
+    window
+      .google!.accounts.oauth2.initCodeClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: GMAIL_SCOPE,
         ux_mode: 'popup',

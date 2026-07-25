@@ -92,9 +92,7 @@ export function HomePage(): JSX.Element {
               </Button>
             </div>
           )}
-          <p className="font-mono text-xs tracking-[0.25em] text-surface/50 mt-14">
-            YAGYU © 2026
-          </p>
+          <p className="font-mono text-xs tracking-[0.25em] text-surface/50 mt-14">YAGYU © 2026</p>
         </div>
       </section>
     </div>

@@ -26,14 +26,14 @@ Named exports only. No default exports.
 
 ## 4) Naming
 
-| Kind | Convention | Example |
-|------|-----------|---------|
-| files | kebab-case | `user.service.ts` |
-| components | PascalCase | `ChatInput` |
-| hooks | `use-*` | `use-auth.ts` |
-| schemas | `*Schema` | `CreateUserSchema` |
-| constants | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| variables/functions | camelCase | `getOrCreate` |
+| Kind                | Convention           | Example            |
+| ------------------- | -------------------- | ------------------ |
+| files               | kebab-case           | `user.service.ts`  |
+| components          | PascalCase           | `ChatInput`        |
+| hooks               | `use-*`              | `use-auth.ts`      |
+| schemas             | `*Schema`            | `CreateUserSchema` |
+| constants           | SCREAMING_SNAKE_CASE | `MAX_RETRY_COUNT`  |
+| variables/functions | camelCase            | `getOrCreate`      |
 
 ## 5) Imports
 

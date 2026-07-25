@@ -201,20 +201,20 @@ npm i @neon/config
 
 ```typescript
 // neon.ts
-import { defineConfig } from "@neon/config/v1";
+import { defineConfig } from '@neon/config/v1';
 
 export default defineConfig({
   preview: {
     aiGateway: true,
     buckets: {
       images: {
-        access: "private",
+        access: 'private',
       },
     },
     functions: {
       imagegen: {
-        name: "AI SDK image agent",
-        source: "src/index.ts",
+        name: 'AI SDK image agent',
+        source: 'src/index.ts',
       },
     },
   },
@@ -261,8 +261,8 @@ npm i @neon/env
 ```
 
 ```typescript
-import { parseEnv } from "@neon/env";
-import config from "./neon";
+import { parseEnv } from '@neon/env';
+import config from './neon';
 
 const env = parseEnv(config);
 
@@ -273,15 +273,15 @@ console.log(env.auth.baseUrl);
 By default `parseEnv` requires _every_ variable your config implies. When one of your apps only uses a subset, for example when you need to read `DATABASE_URL` but never the unpooled URL, pass an array of env-var keys to require and validate only those. The keys are typesafe: autocomplete only offers variables your config enables, and the returned shape is narrowed to exactly what you selected (so unselected variables are neither enforced nor present).
 
 ```typescript
-import { parseEnv } from "@neon/env";
-import config from "./neon";
+import { parseEnv } from '@neon/env';
+import config from './neon';
 
 // Only DATABASE_URL is required and returned; DATABASE_URL_UNPOOLED is not enforced.
-const { postgres } = parseEnv(config, ["DATABASE_URL"]);
+const { postgres } = parseEnv(config, ['DATABASE_URL']);
 console.log(postgres.databaseUrl);
 
 // Selecting across services — only these keys are validated.
-const env = parseEnv(config, ["DATABASE_URL", "NEON_AUTH_BASE_URL"]);
+const env = parseEnv(config, ['DATABASE_URL', 'NEON_AUTH_BASE_URL']);
 console.log(env.postgres.databaseUrl, env.auth.baseUrl);
 ```
 
@@ -295,7 +295,7 @@ Beyond services, `neon.ts` can program what configuration _new_ branches receive
 
 ```typescript
 // neon.ts
-import { defineConfig } from "@neon/config/v1";
+import { defineConfig } from '@neon/config/v1';
 
 export default defineConfig({
   auth: true,
@@ -305,14 +305,14 @@ export default defineConfig({
       // leave existing branches untouched
       return {};
     }
-    if (branch.name.startsWith("dev")) {
+    if (branch.name.startsWith('dev')) {
       return {
-        ttl: "7d", // clean up the branch after 7 days
+        ttl: '7d', // clean up the branch after 7 days
         postgres: {
           computeSettings: {
             autoscalingLimitMinCu: 0.25, // scale to zero
             autoscalingLimitMaxCu: 1, // keep it cheap
-            suspendTimeout: "5m",
+            suspendTimeout: '5m',
           },
         },
       };
@@ -343,8 +343,8 @@ export default defineConfig({ auth: true, dataApi: true });
 // 2. Or verify a third-party IdP instead of Neon Auth:
 export default defineConfig({
   dataApi: {
-    authProvider: "external",
-    jwksUrl: "https://your-idp/.well-known/jwks.json",
+    authProvider: 'external',
+    jwksUrl: 'https://your-idp/.well-known/jwks.json',
   },
 });
 ```

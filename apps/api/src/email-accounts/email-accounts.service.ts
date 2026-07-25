@@ -81,7 +81,10 @@ export class EmailAccountsService {
       const refreshToken = decryptToken(account.encryptedRefreshToken, this.tokenEncryptionKey);
       await this.oauthClient.revokeToken(refreshToken);
     } catch (err) {
-      this.logger.warn({ accountId: account.id, err }, 'Failed to revoke Google token during unlink');
+      this.logger.warn(
+        { accountId: account.id, err },
+        'Failed to revoke Google token during unlink',
+      );
     }
 
     await this.em.removeAndFlush(account);
