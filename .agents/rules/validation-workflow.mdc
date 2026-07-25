@@ -16,5 +16,8 @@ When you change **source code, config, or content** that can affect build or lin
    path), **re-run with full permissions** instead of asking the user.
 4. When the user asked for tests or "full validate", run **`pnpm validate`**
    (check + tests) instead of only `pnpm check`.
+5. Formatting is enforced in CI (`pnpm format:check`). The pre-commit hook
+   formats staged files automatically; if you created or edited files without
+   committing, run **`pnpm format`** so CI does not fail on formatting.
 
 Do not skip validation because the change "looks small."

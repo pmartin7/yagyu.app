@@ -45,10 +45,10 @@ All entities extend `BaseEntity`.
 ```
 BaseEntity (abstract): id (UUID), createdAt, updatedAt
 ├── User: firebaseUid, email, displayName, pushToken (nullable)
-├── EmailAccount: provider (enum: gmail | outlook), emailAddress, displayName,
-│     syncCursor (nullable), status (enum: active | error | disconnected),
-│     user (FK)
-│     — OAuth tokens (refresh token) stored securely, referenced from here
+├── EmailAccount (implemented): provider (enum: gmail), emailAddress,
+│     encryptedRefreshToken (AES-256-GCM, hidden from serialization), user (FK)
+│     — unique (user, emailAddress); outlook + displayName, syncCursor, status
+│       are added when email sync is built
 ├── EmailMessage: providerMessageId, threadId, emailAccount (FK), sender,
 │     subject, snippet, receivedAt, isRead, priorityScore (float),
 │     needsAction (bool), aiSummary (text, nullable),
@@ -59,8 +59,8 @@ BaseEntity (abstract): id (UUID), createdAt, updatedAt
       contextSummary, recommendedActions
 ```
 
-Only `User` exists in code today; the other entities are added as their
-features are built. Keep this model as the reference when adding them.
+`User` and `EmailAccount` exist in code today; the other entities are added as
+their features are built. Keep this model as the reference when adding them.
 
 ### Data Flow
 
@@ -74,10 +74,30 @@ Push:    apps/api → expo-notifications (User.pushToken) → mobile device
 CRUD:    Client → fetch → /api/{resource} → Guard → Service → MikroORM → Neon Postgres
 ```
 
-### Deployment
+### Deployment & Environments
+
+One Neon Postgres project with three database branches mirroring the git flow:
+
+| Git branch | Vercel environment          | Neon branch  | GitHub environment |
+| ---------- | --------------------------- | ------------ | ------------------ |
+| `main`     | Production (yagyu.app)      | `production` | `production`       |
+| `staging`  | Preview (staging.yagyu.app) | `staging`    | `staging`          |
+| local dev  | —                           | `dev`        | —                  |
+
+- Local dev: `.env` `NEON_DATABASE_URL` points at the Neon `dev` branch (direct
+  URL). Iterate on schema there without touching shared environments.
+- Vercel runtime uses **pooled** connection strings (`-pooler` host); migrations
+  use **direct** URLs.
+- `.github/workflows/ci.yml` — format check + lint + type-check + tests on every
+  push/PR to `staging`/`main`.
+- `.github/workflows/migrate.yml` — on push to `staging`/`main`, applies pending
+  MikroORM migrations using the matching GitHub environment's
+  `NEON_DATABASE_URL` secret (concurrency-guarded per environment).
+- Flow: iterate locally on `dev` → merge to `staging` (CI + staging migration +
+  staging deploy) → merge to `main` (CI + production migration + production
+  deploy).
 
 ```
-GitHub → push to main → Vercel auto-deploy
 Web: Vite SPA (static)
 API: NestJS single serverless function
 Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-init)
