@@ -1,6 +1,8 @@
 import './config/load-env.js';
 import { defineConfig } from '@mikro-orm/postgresql';
 import { Migrator } from '@mikro-orm/migrations';
+import { User } from './users/entities/user.entity.js';
+import { EmailAccount } from './email-accounts/entities/email-account.entity.js';
 
 export function buildOrmConfig(clientUrl: string | undefined): ReturnType<typeof defineConfig> {
   return defineConfig({
@@ -10,8 +12,10 @@ export function buildOrmConfig(clientUrl: string | undefined): ReturnType<typeof
     driverOptions: clientUrl?.includes('sslmode=require')
       ? { connection: { ssl: true } }
       : undefined,
-    entities: ['./dist/**/*.entity.js'],
-    entitiesTs: ['./src/**/*.entity.ts'],
+    // Entities are registered statically (no filesystem glob discovery):
+    // Vercel's bundler only includes files reachable through imports, so a
+    // glob would find nothing inside the deployed function.
+    entities: [User, EmailAccount],
     extensions: [Migrator],
     migrations: {
       path: './migrations',
