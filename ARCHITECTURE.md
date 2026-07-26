@@ -65,7 +65,8 @@ their features are built. Keep this model as the reference when adding them.
 ### Data Flow
 
 ```
-Auth:    Client (mobile/web) → Firebase SDK → JWT → API Guard → verify → getOrCreate User
+Auth:    Client (mobile/web) → Firebase SDK → JWT → API Guard → verify JWT →
+         RLS interceptor (tx + set_config) → getOrCreate User
 Sync:    Provider (Gmail/Outlook) → apps/api email sync → EmailMessage rows (per EmailAccount syncCursor)
 Triage:  New EmailMessage → AI SDK (Anthropic) → priorityScore, needsAction, aiSummary,
          aiRecommendedActions, dynamic Category assignment
@@ -84,10 +85,12 @@ One Neon Postgres project with three database branches mirroring the git flow:
 | `staging`  | Preview (staging.yagyu.app) | `staging`    | `staging`          |
 | local dev  | —                           | `dev`        | —                  |
 
-- Local dev: `.env` `NEON_DATABASE_URL` points at the Neon `dev` branch (direct
-  URL). Iterate on schema there without touching shared environments.
-- Vercel runtime uses **pooled** connection strings (`-pooler` host); migrations
-  use **direct** URLs.
+- Local dev: `.env` `NEON_DATABASE_URL` (owner, migrations) and
+  `NEON_APP_DATABASE_URL` (app_user, API runtime) point at the Neon `dev`
+  branch (direct URLs). Iterate on schema there without touching shared
+  environments.
+- Vercel runtime uses a **pooled** `NEON_APP_DATABASE_URL` (`-pooler` host);
+  migrations use the **direct** owner `NEON_DATABASE_URL`.
 - `.github/workflows/ci.yml` — format check + lint + type-check + tests on every
   push/PR to `staging`/`main`.
 - `.github/workflows/migrate.yml` — on push to `staging`/`main`, applies pending
@@ -110,3 +113,28 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - Named exports only
 - MikroORM RequestContext per request (forMiddleware)
 - Pino structured logging (nestjs-pino)
+- Postgres RLS enforced on all user-owned tables; every new user-owned
+  table's migration must add ENABLE (+ FORCE) + an isolation policy; request
+  identity flows via the transaction-local setting `app.firebase_uid`
+
+### Row-Level Security
+
+- Two database credentials: migrations/CLI run as `neondb_owner` (table
+  owner; has BYPASSRLS on Neon, so backfill DML needs no special handling),
+  the API runtime connects as `app_user` (`NOBYPASSRLS`, DML grants only) via
+  `NEON_APP_DATABASE_URL`. RLS policies therefore bind every runtime query.
+- `FirebaseAuthGuard` verifies the JWT only (no DB access) and stashes claims
+  on the request; the global `RlsContextInterceptor` wraps every authenticated
+  request in one MikroORM transaction that first runs
+  `select set_config('app.firebase_uid', <uid>, true)`, then syncs the user
+  (`getOrCreate`) and runs the handler inside that transaction.
+- Fail-closed: without the setting, `current_setting('app.firebase_uid', true)`
+  yields NULL (or `''`) and the policies match nothing.
+- Per-environment setup (one-time, after the role migration has run):
+  `alter role app_user with login password '<generated>';` then set
+  `NEON_APP_DATABASE_URL` (pooled host on Vercel, direct locally). Table
+  grants for future tables are covered by default privileges; new user-owned
+  tables only need ENABLE RLS + a policy in their migration.
+- Transaction-per-request pins a pooled connection for the request duration.
+  Future streaming/SSE endpoints (e.g. AI chat) must opt out of the
+  interceptor, or they would hold a transaction open for the whole stream.

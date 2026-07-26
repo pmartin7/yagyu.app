@@ -10,8 +10,10 @@ function base64DecodedByteLength(value: string): number {
 }
 
 export const EnvSchema = z.object({
-  // Database
+  // Database: owner credential (migrations/CLI) + RLS-bound app_user
+  // credential (API runtime)
   NEON_DATABASE_URL: z.string().url(),
+  NEON_APP_DATABASE_URL: z.string().url(),
 
   // Firebase Admin SDK
   FIREBASE_PROJECT_ID: z.string().min(1),
