@@ -99,6 +99,13 @@ One Neon Postgres project with three database branches mirroring the git flow:
 - Flow: iterate locally on `dev` → merge to `staging` (CI + staging migration +
   staging deploy) → merge to `main` (CI + production migration + production
   deploy).
+- One Vercel project (`yagyu-app`) serves both apps: the static SPA from
+  `apps/web/dist` and the API as a single serverless function. Root
+  `api/index.js` wraps the compiled Nest app (`apps/api/src/serverless.ts`);
+  `vercel.json` rewrites `/api/*` to the function and everything else to
+  `index.html` (SPA fallback). ORM entities are registered statically in
+  `mikro-orm.config.ts` — the function bundler only includes files reachable
+  through imports, so glob discovery must not be reintroduced.
 
 ```
 Web: Vite SPA (static)
