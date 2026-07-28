@@ -148,3 +148,50 @@ Do not:
 - log secrets or full payloads
 - skip pnpm check after edits
 - create docs that duplicate information already in another doc
+
+## Cursor Cloud specific instructions
+
+Startup runs `pnpm install` only. Commands (`pnpm dev`, `check`, `validate`,
+`build`, etc.) are in §3. `pnpm check`, `pnpm test`, and `pnpm build` need no
+secrets. Non-obvious caveats:
+
+- **`apps/web` runs with no secrets.** Firebase is lazy-initialised
+  (`src/lib/firebase.ts`), so the landing (`/`) and login (`/login`) pages
+  render without any `VITE_*` env. `pnpm dev` serves it on :5173. Real
+  sign-in/Google sign-in needs real `VITE_FIREBASE_*` / `VITE_GOOGLE_CLIENT_ID`.
+- **`apps/api` will not boot without a full env.** `createApp()` runs a strict
+  Zod `EnvSchema` (`packages/shared/src/schemas/env.ts`) and Firebase-admin init
+  at startup. Required: `NEON_DATABASE_URL`, `NEON_APP_DATABASE_URL`,
+  `FIREBASE_PROJECT_ID`/`FIREBASE_PRIVATE_KEY`/`FIREBASE_CLIENT_EMAIL`,
+  `DEFAULT_AI_MODEL`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`,
+  `TOKEN_ENCRYPTION_KEY` (base64 32 bytes: `openssl rand -base64 32`). See
+  `.env.example`. Provide real values via the Cursor Secrets panel, or run the
+  API against local stand-ins (below). `load-env.ts` reads repo-root `.env` but
+  never overrides already-set process env, so injected secrets win.
+- **Local Postgres URLs must NOT contain `sslmode=require`.** `mikro-orm.config`
+  only enables the pg SSL driver option when the URL contains `sslmode=require`
+  (needed for Neon); a local server has no SSL and will reject it.
+- **Two DB roles by design (RLS).** Migrations run as the owner
+  (`NEON_DATABASE_URL`, must have BYPASSRLS — a local superuser works); the API
+  runtime connects as the RLS-bound `app_user` (`NEON_APP_DATABASE_URL`,
+  NOBYPASSRLS). `app_user` is created _by migration_ with `nologin`; after
+  migrating you must `ALTER ROLE app_user WITH LOGIN PASSWORD '<pw>'` before the
+  API can connect. Request identity flows via the tx-local `app.firebase_uid`
+  (set by `RlsContextInterceptor`); no setting ⇒ policies match nothing.
+- **`pnpm migrate:up` gotcha.** It loads compiled entities from `apps/api/dist`
+  (MikroORM's ReflectMetadataProvider needs `emitDecoratorMetadata`, which
+  tsx/ts-node do NOT emit), so build first (`pnpm build --filter=@morpheus/api`).
+  The migration files live _outside_ `src` and are not emitted by `nest build`,
+  and no `ts-node` is installed, so vanilla `pnpm migrate:up` cannot load them
+  locally on Node 22. CI runs this on Node 24 (native TS). To apply migrations
+  locally, compile the `apps/api/migrations/*.ts` to JS and point the migrator
+  at them, or apply the SQL directly.
+- **Offline auth = Firebase Auth emulator.** The guard calls
+  `admin.auth().verifyIdToken` and requires `email_verified: true`. To exercise
+  authenticated endpoints without a real Firebase project, run the Auth emulator
+  (Node-only, no Java) and set `FIREBASE_AUTH_EMULATOR_HOST`; firebase-admin then
+  accepts emulator-issued tokens. Use a `demo-*` project id.
+- **`pnpm validate:local`** (Playwright harness for `/` + `/login`) needs the
+  browser binary once: `pnpm exec playwright install chromium`. It reuses a dev
+  server already on :5173, else boots its own; screenshots land in
+  `harness/artifacts/`.
