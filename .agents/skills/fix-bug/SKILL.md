@@ -49,3 +49,22 @@ Delegate to bug-fixer-ninja agent:
 - Reference `.agents/skills/fix-bug/references/fix-evaluation-criteria.md`
 
 Present the ninja's root cause analysis and proposed fix to the user.
+
+## Phase 6 — Capture the Invariant
+
+Once the fix is applied and `pnpm check` passes, ask: **why was this bug
+writable in the first place?** If the answer is a fact about the system that was
+not written down anywhere, write it down now.
+
+- A rule future code must obey → Key Invariants in `ARCHITECTURE.md`
+- A flow that behaves differently than the docs imply → Data Flow / the relevant
+  `docs/*.md`
+- A route, guard, entity, or env var that changed → the matching section, then
+  `pnpm docs:check`
+- A case the harness should have caught → add the route or assertion to
+  `harness/`
+
+State the invariant as the constraint, not as a changelog entry: "verification
+is read from the ID token claim, never `user.emailVerified` — they diverge on
+session restore" prevents the next recurrence; "fixed the verify-email bug" does
+not. A bug class that stays undocumented gets reintroduced.

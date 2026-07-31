@@ -5,10 +5,16 @@ import { Card } from '../components/ui/card.js';
 import { Button } from '../components/ui/button.js';
 import { HankoMark } from '../components/hanko-mark.js';
 
+// Accounts created before sign-up asked for a name have no displayName, and a
+// whole email address overflows the card — the local part reads better.
+function greetingName(displayName: string | null, email: string | null): string {
+  return displayName ?? email?.split('@')[0] ?? 'there';
+}
+
 export function WelcomePage(): JSX.Element {
   const { user } = useAuth();
   const { accounts, error, link } = useEmailAccounts();
-  const name = user?.displayName ?? user?.email ?? 'there';
+  const name = greetingName(user?.displayName ?? null, user?.email ?? null);
 
   const handleLink = async (): Promise<void> => {
     try {
@@ -23,7 +29,7 @@ export function WelcomePage(): JSX.Element {
       <Card className="w-full max-w-sm p-8 text-center">
         <div className="flex flex-col items-center gap-4">
           <HankoMark className="h-10 w-10" />
-          <h1 className="font-display text-3xl font-semibold text-ink tracking-tight">
+          <h1 className="font-display text-3xl font-semibold text-ink tracking-tight break-words max-w-full">
             Welcome, {name}
           </h1>
           <p className="text-ink-muted leading-relaxed">

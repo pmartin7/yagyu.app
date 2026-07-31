@@ -31,12 +31,51 @@ actions (Anthropic / Claude).
 | Todos          | List, add, edit, complete, snooze, recategorize       |
 | Settings       | Accounts, notifications                               |
 
-### Route Map (apps/web — marketing/landing)
+### Route Map (apps/web)
 
-| Route  | Page          | Auth |
-| ------ | ------------- | ---- |
-| /      | Landing page  | No   |
-| /login | Firebase auth | No   |
+| Route         | Page                   | Guard                                         |
+| ------------- | ---------------------- | --------------------------------------------- |
+| /             | Landing page           | `PublicRoute` — signed-in visitors redirected |
+| /login        | Sign in / sign up      | `PublicRoute` — signed-in visitors redirected |
+| /verify-email | Awaiting verification  | none — owns its own redirects                 |
+| /welcome      | Post-signup onboarding | `ProtectedRoute` — signed in **and** verified |
+| /settings     | Linked Gmail accounts  | `ProtectedRoute` — signed in **and** verified |
+
+Guards live in `apps/web/src/features/auth/`. `PublicRoute` sends an
+authenticated visitor to `/welcome`, or to `/verify-email` when unverified, and
+renders its children while auth resolves so anonymous visitors never wait on a
+spinner. `/verify-email` is deliberately unguarded: it is the one page for the
+signed-in-but-unverified state that both guards redirect _to_.
+
+### Authentication & Email Verification
+
+Firebase Auth owns identity. The API trusts the ID token and nothing else.
+
+Sign-up (email/password):
+
+1. `createUserWithEmailAndPassword` — the session is deliberately kept, because
+   verification status can only be polled for a signed-in account.
+2. `updateProfile({ displayName })` with the name captured on the sign-up form.
+   That becomes the token's `name` claim, which the API stores as
+   `User.displayName` when it creates the row on the first authenticated
+   request. There is no separate "create user" endpoint.
+3. `sendEmailVerification` with a continue URL of `/verify-email`.
+4. `/verify-email` polls every 5s and resends behind a 60s cooldown whose
+   timestamp lives in `sessionStorage`, so the lock survives a page reload.
+
+**Invariant — verification is a property of the token, not of the account.**
+`user.emailVerified` and the ID token's `email_verified` claim diverge, and the
+API guard reads the claim: restoring a session reloads the account flag from
+Firebase but leaves the cached token untouched (`_reloadWithoutSaving` fetches
+account info with an _unforced_ `getIdToken()`). Therefore:
+
+- `AuthProvider` and both guards derive verification from `getIdTokenResult()`,
+  never from `user.emailVerified`;
+- whenever verification is newly observed, the client must mint a fresh token
+  (`getIdToken(true)`) before it calls the API.
+
+Breaking either half produces one silent failure mode: a "verified" user sitting
+on `/welcome` whose every API call 401s, with no `User` row ever created.
 
 ### Entity Model
 
@@ -44,7 +83,8 @@ All entities extend `BaseEntity`.
 
 ```
 BaseEntity (abstract): id (UUID), createdAt, updatedAt
-├── User: firebaseUid, email, displayName, pushToken (nullable)
+├── User: firebaseUid, email, displayName (nullable),
+│     pushToken (nullable — added when push notifications are built)
 ├── EmailAccount (implemented): provider (enum: gmail), emailAddress,
 │     encryptedRefreshToken (AES-256-GCM, hidden from serialization), user (FK)
 │     — unique (user, emailAddress); outlook + displayName, syncCursor, status
@@ -65,8 +105,9 @@ their features are built. Keep this model as the reference when adding them.
 ### Data Flow
 
 ```
-Auth:    Client (mobile/web) → Firebase SDK → JWT → API Guard → verify JWT →
-         RLS interceptor (tx + set_config) → getOrCreate User
+Auth:    Client (mobile/web) → Firebase SDK → JWT → API Guard → verify JWT +
+         require email_verified claim → RLS interceptor (tx + set_config) →
+         getOrCreate User (displayName from the token's `name` claim)
 Sync:    Provider (Gmail/Outlook) → apps/api email sync → EmailMessage rows (per EmailAccount syncCursor)
 Triage:  New EmailMessage → AI SDK (Anthropic) → priorityScore, needsAction, aiSummary,
          aiRecommendedActions, dynamic Category assignment
@@ -123,6 +164,10 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - Postgres RLS enforced on all user-owned tables; every new user-owned
   table's migration must add ENABLE (+ FORCE) + an isolation policy; request
   identity flows via the transaction-local setting `app.firebase_uid`
+- Email verification is read from the ID token's `email_verified` claim, never
+  from `user.emailVerified` (see Authentication & Email Verification)
+- The web route map above and `apps/web/src/app/router.tsx` are one system —
+  `pnpm docs:check` fails when they drift
 
 ### Row-Level Security
 

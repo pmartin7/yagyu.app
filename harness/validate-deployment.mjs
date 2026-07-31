@@ -19,6 +19,7 @@ import { mkdirSync } from 'fs';
 import { homedir } from 'os';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { launchChromium } from './lib/browser.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ARTIFACTS = resolve(ROOT, 'harness/artifacts');
@@ -154,9 +155,8 @@ async function main() {
 
   // 3. Visual check on production: catches the blank-page class of failures
   try {
-    const { chromium } = await import('playwright');
     mkdirSync(ARTIFACTS, { recursive: true });
-    const browser = await chromium.launch();
+    const browser = await launchChromium();
     try {
       const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
       const consoleErrors = [];
@@ -181,10 +181,8 @@ async function main() {
     } finally {
       await browser.close();
     }
-  } catch {
-    console.log(
-      'WARN visual check skipped: playwright not installed (run `pnpm install && pnpm exec playwright install chromium`)',
-    );
+  } catch (err) {
+    console.log(`WARN visual check skipped: ${err.message}`);
   }
 
   console.log(

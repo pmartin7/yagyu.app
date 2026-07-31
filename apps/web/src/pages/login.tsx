@@ -6,13 +6,11 @@ import { Input } from '../components/ui/input.js';
 import { Card } from '../components/ui/card.js';
 import { HankoMark } from '../components/hanko-mark.js';
 
-type Mode = 'signin' | 'signup' | 'check-email';
+type Mode = 'signin' | 'signup';
 
 function errorMessage(err: unknown): string {
   const code = err instanceof Error ? err.message : '';
   switch (code) {
-    case 'email-not-verified':
-      return 'Please verify your email before signing in. Check your inbox for the link.';
     case 'auth/email-already-in-use':
       return 'An account with this email already exists.';
     case 'auth/weak-password':
@@ -35,6 +33,7 @@ export function LoginPage(): JSX.Element {
   const { signIn, signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('signin');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -51,11 +50,16 @@ export function LoginPage(): JSX.Element {
     setLoading(true);
     try {
       if (mode === 'signup') {
-        await signUp(email, password);
-        setMode('check-email');
+        const displayName = name.trim();
+        if (!displayName) {
+          setError('Please enter your name.');
+          return;
+        }
+        await signUp(email, password, displayName);
+        navigate('/verify-email', { replace: true });
       } else {
-        await signIn(email, password);
-        navigate('/welcome');
+        const credential = await signIn(email, password);
+        navigate(credential.user.emailVerified ? '/welcome' : '/verify-email', { replace: true });
       }
     } catch (err) {
       setError(errorMessage(err));
@@ -79,28 +83,6 @@ export function LoginPage(): JSX.Element {
       setLoading(false);
     }
   };
-
-  if (mode === 'check-email') {
-    return (
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <Card className="w-full max-w-sm p-8 text-center">
-          <div className="flex flex-col items-center gap-4">
-            <HankoMark className="h-10 w-10" />
-            <h1 className="font-display text-3xl font-semibold text-ink tracking-tight">
-              Check your email
-            </h1>
-            <p className="text-ink-muted leading-relaxed">
-              We sent a verification link to <span className="text-ink">{email}</span>. Verify your
-              address, then sign in.
-            </p>
-            <Button variant="ghost" className="mt-2" onClick={() => setMode('signin')}>
-              Back to sign in
-            </Button>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="flex-1 flex items-center justify-center px-4 py-16">
@@ -148,6 +130,17 @@ export function LoginPage(): JSX.Element {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === 'signup' && (
+            <Input
+              type="text"
+              placeholder="Name"
+              aria-label="Name"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          )}
           <Input
             type="email"
             placeholder="Email"

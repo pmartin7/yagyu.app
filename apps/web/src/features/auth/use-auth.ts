@@ -6,9 +6,12 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut as firebaseSignOut,
+  updateProfile,
 } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 import { getFirebaseAuth } from '../../lib/firebase.js';
 import { AuthContext } from './auth-provider.js';
+import { markVerificationRequested } from './verification-cooldown.js';
 
 function requireAuth() {
   const auth = getFirebaseAuth();
@@ -18,27 +21,39 @@ function requireAuth() {
   return auth;
 }
 
-export function useAuth() {
-  const { user, loading } = useContext(AuthContext);
+async function sendVerification(user: FirebaseUser): Promise<void> {
+  try {
+    // Firebase appends its code to this URL, so clicking the link in the same
+    // browser lands back on the page already polling for verification.
+    await sendEmailVerification(user, { url: `${window.location.origin}/verify-email` });
+  } finally {
+    // Marked even on failure: the likely cause is Firebase rate limiting, and
+    // an immediate retry would only dig the hole deeper.
+    markVerificationRequested();
+  }
+}
 
-  const signIn = async (email: string, password: string) => {
-    const credential = await signInWithEmailAndPassword(requireAuth(), email, password);
-    if (!credential.user.emailVerified) {
-      await firebaseSignOut(requireAuth());
-      throw new Error('email-not-verified');
-    }
+export function useAuth() {
+  const { user, emailVerified, loading, refreshUser } = useContext(AuthContext);
+
+  const signIn = (email: string, password: string) =>
+    signInWithEmailAndPassword(requireAuth(), email, password);
+
+  // The session is deliberately kept after sign-up: the account is needed to
+  // poll verification status and to resend the email from /verify-email.
+  const signUp = async (email: string, password: string, displayName: string) => {
+    const credential = await createUserWithEmailAndPassword(requireAuth(), email, password);
+    // Sets the ID token's "name" claim, which the API stores as User.displayName
+    // when it creates the row on the first authenticated request.
+    await updateProfile(credential.user, { displayName });
+    await sendVerification(credential.user);
     return credential;
   };
 
-  const signUp = async (email: string, password: string) => {
-    const auth = requireAuth();
-    const credential = await createUserWithEmailAndPassword(auth, email, password);
-    try {
-      await sendEmailVerification(credential.user, { url: `${window.location.origin}/login` });
-    } finally {
-      await firebaseSignOut(auth);
-    }
-    return credential;
+  const resendVerification = async (): Promise<void> => {
+    const current = requireAuth().currentUser;
+    if (!current) throw new Error('not-signed-in');
+    await sendVerification(current);
   };
 
   const signInWithGoogle = () => signInWithPopup(requireAuth(), new GoogleAuthProvider());
@@ -53,5 +68,16 @@ export function useAuth() {
     return user.getIdToken();
   }, [user]);
 
-  return { user, loading, signIn, signUp, signInWithGoogle, signOut, getToken };
+  return {
+    user,
+    emailVerified,
+    loading,
+    refreshUser,
+    signIn,
+    signUp,
+    resendVerification,
+    signInWithGoogle,
+    signOut,
+    getToken,
+  };
 }

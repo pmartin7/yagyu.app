@@ -14,11 +14,14 @@ import { spawn } from 'child_process';
 import { mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { launchChromium } from './lib/browser.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ARTIFACTS = resolve(ROOT, 'harness/artifacts');
 const WEB_URL = 'http://localhost:5173';
-const DEFAULT_ROUTES = ['/', '/login'];
+// Signed out, the guarded routes redirect rather than render their own page —
+// which is exactly the guard chain worth smoke-testing for crashes.
+const DEFAULT_ROUTES = ['/', '/login', '/verify-email', '/welcome', '/settings'];
 const BOOT_TIMEOUT_MS = 60_000;
 
 const extraRoutes = process.argv.flatMap((a, i, all) =>
@@ -59,16 +62,6 @@ async function bootDevServer() {
 }
 
 async function main() {
-  let chromium;
-  try {
-    ({ chromium } = await import('playwright'));
-  } catch {
-    console.error(
-      'FAIL harness: playwright is not installed. Remediation: run `pnpm install`, then `pnpm exec playwright install chromium`.',
-    );
-    process.exit(2);
-  }
-
   mkdirSync(ARTIFACTS, { recursive: true });
 
   const reusedServer = await isUp(WEB_URL);
@@ -79,12 +72,9 @@ async function main() {
 
   let browser;
   try {
-    browser = await chromium.launch();
+    browser = await launchChromium();
   } catch (err) {
-    console.error(
-      `FAIL harness: could not launch Chromium (${err.message}). ` +
-        'Remediation: run `pnpm exec playwright install chromium`.',
-    );
+    console.error(`FAIL harness: ${err.message}`);
     process.exit(2);
   }
 

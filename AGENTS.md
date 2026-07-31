@@ -46,6 +46,7 @@ packages/shared        Zod schemas + inferred TypeScript types
 packages/tsconfig      Shared TypeScript base configs
 packages/eslint-config Shared ESLint flat configs
 docs/                  Style guide, testing, logging, UI design
+harness/               Agent-facing harnesses: visual checks, deploy checks, docs sync
 .github/workflows/     CI (format+lint+type-check+test) + DB migration pipelines
 .husky/                Pre-commit hook (lint-staged: eslint --fix + prettier)
 .agents/skills/        Agent skills (workflows) — source of truth
@@ -61,13 +62,19 @@ docs/                  Style guide, testing, logging, UI design
 pnpm install
 pnpm dev          # starts web (:5173) + api (:3000)
 pnpm build
-pnpm check        # lint + type-check
-pnpm validate     # check + tests
+pnpm check        # lint + type-check + docs:check
+pnpm validate     # check + tests + docs:check
 pnpm test
+pnpm docs:check   # assert routes/entities/env vars still match the docs
 pnpm format       # prettier --write (also runs on save + pre-commit + CI check)
 pnpm validate:local   # boot + drive web app headlessly, screenshots → harness/artifacts/
 pnpm validate:deploy  # verify Vercel deployments are READY and live site renders
+pnpm playwright:install  # one-time Chromium install for the harnesses
 ```
+
+The Playwright harnesses need real permissions: Chromium segfaults inside the
+agent sandbox, so run `validate:local` / `validate:deploy` with full permissions.
+They now say so explicitly instead of re-downloading the browser.
 
 ## 4) Stack
 
@@ -92,6 +99,13 @@ pnpm validate:deploy  # verify Vercel deployments are READY and live site render
    secrets, tokens, or full payloads.
 6. YAGNI. Build what is needed now. No abstractions for hypothetical futures.
 7. Simple over clever. Flat over nested. Explicit over implicit.
+8. Docs are part of the change. Routes, entities, env vars, flows, and
+   invariants get updated in the same pass, verified by `pnpm docs:check`.
+   Stale docs are worse than none — every future agent inherits the error.
+9. Harness before infra. Before adding a new piece of the stack (mobile app,
+   queue, cache, search), evaluate the options, then build the harness that
+   proves it works and the doc that explains it — then build the thing. An
+   agent cannot iterate on what it cannot observe.
 
 ## 6) General Principles
 
@@ -119,7 +133,8 @@ pnpm validate:deploy  # verify Vercel deployments are READY and live site render
 4. Run pnpm check (default sandbox first; full permissions only on EPERM)
 5. If implementation is done, run a separate test-writing pass
 6. Run pnpm validate when tests are in scope
-7. If conventions changed, update docs
+7. Update the docs your change made stale, in this same pass, and record any
+   invariant you discovered (see `.agents/rules/documentation-currency.mdc`)
 
 ## 9) Available Skills
 
@@ -137,6 +152,7 @@ pnpm validate:deploy  # verify Vercel deployments are READY and live site render
 | add-vector-store      | /add-vector-store | Wire Turbopuffer vector search                              |
 | add-blob-storage      | /add-blob-storage | Wire Vercel Blob file storage                               |
 | validate-app          | /validate-app     | Visual local validation + deployment verification harnesses |
+| release               | /release          | Promote work local → staging → main with gates at each step |
 
 ## 10) Anti-Patterns
 
@@ -148,3 +164,8 @@ Do not:
 - log secrets or full payloads
 - skip pnpm check after edits
 - create docs that duplicate information already in another doc
+- ship a route, entity, env var, or flow change without updating `ARCHITECTURE.md`
+- leave a hard-won invariant recorded only in a chat, a commit message, or a
+  `docs/plans/` file
+- add a new piece of the stack before its harness and its doc exist
+- reinstall Chromium when a harness fails — read its remediation line first
