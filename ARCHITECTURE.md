@@ -147,6 +147,17 @@ One Neon Postgres project with three database branches mirroring the git flow:
   `index.html` (SPA fallback). ORM entities are registered statically in
   `mikro-orm.config.ts` — the function bundler only includes files reachable
   through imports, so glob discovery must not be reintroduced.
+- `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
+  permanently redirected to `yagyu.app` via host-matched rules in
+  `vercel.json` (`redirects`, not the dashboard's per-domain redirect toggle —
+  keeping it in the repo means it survives a domain being removed and
+  re-added). If a new domain is attached and its nameservers correctly point
+  at Vercel but `vercel dns ls <domain>` shows no records and every write
+  fails with "not a DNS zone" (400), Vercel's zone-provisioning for that
+  domain is stuck; `vercel domains rm <domain> --yes` then
+  `vercel domains add <domain> yagyu-app` recreates it — this happened for
+  `yagyu.ai`, unresolvable for over a week despite correct delegation, fixed
+  by that remove/re-add.
 
 ```
 Web: Vite SPA (static)
