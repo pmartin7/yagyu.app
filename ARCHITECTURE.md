@@ -153,16 +153,20 @@ One Neon Postgres project with three database branches mirroring the git flow:
   `mikro-orm.config.ts` — the function bundler only includes files reachable
   through imports, so glob discovery must not be reintroduced.
 - `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
-  permanently redirected to `yagyu.app` via host-matched rules in
-  `vercel.json` (`redirects`, not the dashboard's per-domain redirect toggle —
-  keeping it in the repo means it survives a domain being removed and
-  re-added). If a new domain is attached and its nameservers correctly point
-  at Vercel but `vercel dns ls <domain>` shows no records and every write
-  fails with "not a DNS zone" (400), Vercel's zone-provisioning for that
-  domain is stuck; `vercel domains rm <domain> --yes` then
-  `vercel domains add <domain> yagyu-app` recreates it — this happened for
-  `yagyu.ai`, unresolvable for over a week despite correct delegation, fixed
-  by that remove/re-add.
+  permanently redirected to `yagyu.app`. The authoritative redirect is the
+  **project domain redirect** (`redirect=yagyu.app`, status 308) — the same
+  mechanism already used for `www.yagyu.app` → `yagyu.app`. Host-matched
+  rules in `vercel.json` alone do **not** fire for these aliases (they return
+  200 and serve the SPA); keep them only as defense-in-depth. Set or restore
+  the project redirect with:
+  `PATCH /v9/projects/{id}/domains/{domain}` body
+  `{"redirect":"yagyu.app","redirectStatusCode":308}` (or the Domains UI).
+  If a new domain is attached and its nameservers correctly point at Vercel
+  but `vercel dns ls <domain>` shows no records and every write fails with
+  "not a DNS zone" (400), Vercel's zone-provisioning for that domain is stuck;
+  `vercel domains rm <domain> --yes` then `vercel domains add <domain>
+yagyu-app` recreates it — this happened for `yagyu.ai`, unresolvable for
+  over a week despite correct delegation, fixed by that remove/re-add.
 
 ```
 Web: Vite SPA (static)
