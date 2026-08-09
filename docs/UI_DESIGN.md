@@ -79,6 +79,23 @@ library. See `apps/web/src/components/ui/` for available primitives.
 Interaction states: primary buttons lift 1px with a soft shadow on hover;
 focus-visible rings use `primary/40`; disabled is 50% opacity.
 
+Icons are hand-inlined stroke SVGs (`apps/web/src/components/icons.tsx`) —
+`viewBox 0 0 24 24`, `strokeWidth 2`, round caps, `currentColor` stroke. No
+icon library dependency; add new icons there rather than inlining raw path
+data in feature components.
+
+### Side panel (authenticated chrome)
+
+Every authenticated page (`/welcome`, `/settings`, `/tasks`) renders inside
+`AppLayout` alongside a persistent nav panel (`apps/web/src/components/side-
+panel.tsx`): a "Tasks" link, a static "Sources" section listing linked email
+accounts, and a "Settings" link pinned to the bottom. The same `SidePanel` is
+mounted exactly once per render — as a fixed-width `<aside>` at `lg:` and up,
+or inside a `Sheet` (`apps/web/src/components/ui/sheet.tsx`, a controlled
+Radix Dialog) below it — chosen by a `min-width: 1024px` media query, never
+both at once via CSS-hiding one copy. Add new authenticated-app nav items to
+`SidePanel`, not to individual pages.
+
 ## 6) Responsive
 
 Mobile-first utility classes. Breakpoints: sm (640px), md (768px), lg (1024px).

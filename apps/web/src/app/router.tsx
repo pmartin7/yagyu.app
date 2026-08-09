@@ -6,6 +6,7 @@ import { PublicRoute } from '../features/auth/public-route.js';
 import { HomePage } from '../pages/home.js';
 import { LoginPage } from '../pages/login.js';
 import { SettingsPage } from '../pages/settings.js';
+import { TasksPage } from '../pages/tasks.js';
 import { VerifyEmailPage } from '../pages/verify-email.js';
 import { WelcomePage } from '../pages/welcome.js';
 
@@ -49,6 +50,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <SettingsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/tasks',
+        element: (
+          <ProtectedRoute>
+            <TasksPage />
           </ProtectedRoute>
         ),
       },

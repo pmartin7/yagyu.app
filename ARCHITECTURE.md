@@ -33,19 +33,24 @@ actions (Anthropic / Claude).
 
 ### Route Map (apps/web)
 
-| Route         | Page                   | Guard                                         |
-| ------------- | ---------------------- | --------------------------------------------- |
-| /             | Landing page           | `PublicRoute` — signed-in visitors redirected |
-| /login        | Sign in / sign up      | `PublicRoute` — signed-in visitors redirected |
-| /verify-email | Awaiting verification  | none — owns its own redirects                 |
-| /welcome      | Post-signup onboarding | `ProtectedRoute` — signed in **and** verified |
-| /settings     | Linked Gmail accounts  | `ProtectedRoute` — signed in **and** verified |
+| Route         | Page                    | Guard                                         |
+| ------------- | ----------------------- | --------------------------------------------- |
+| /             | Landing page            | `PublicRoute` — signed-in visitors redirected |
+| /login        | Sign in / sign up       | `PublicRoute` — signed-in visitors redirected |
+| /verify-email | Awaiting verification   | none — owns its own redirects                 |
+| /welcome      | Post-signup onboarding  | `ProtectedRoute` — signed in **and** verified |
+| /settings     | Linked Gmail accounts   | `ProtectedRoute` — signed in **and** verified |
+| /tasks        | Todo list (empty state) | `ProtectedRoute` — signed in **and** verified |
 
 Guards live in `apps/web/src/features/auth/`. `PublicRoute` sends an
 authenticated visitor to `/welcome`, or to `/verify-email` when unverified, and
 renders its children while auth resolves so anonymous visitors never wait on a
 spinner. `/verify-email` is deliberately unguarded: it is the one page for the
 signed-in-but-unverified state that both guards redirect _to_.
+
+Every authenticated route (`/welcome`, `/settings`, `/tasks`) renders inside
+`AppLayout`'s side panel chrome — see `docs/UI_DESIGN.md` §5 for the
+`SidePanel`/`Sheet` pattern.
 
 ### Authentication & Email Verification
 

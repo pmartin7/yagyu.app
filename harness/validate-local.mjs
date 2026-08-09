@@ -21,7 +21,7 @@ const ARTIFACTS = resolve(ROOT, 'harness/artifacts');
 const WEB_URL = 'http://localhost:5173';
 // Signed out, the guarded routes redirect rather than render their own page —
 // which is exactly the guard chain worth smoke-testing for crashes.
-const DEFAULT_ROUTES = ['/', '/login', '/verify-email', '/welcome', '/settings'];
+const DEFAULT_ROUTES = ['/', '/login', '/verify-email', '/welcome', '/settings', '/tasks'];
 const BOOT_TIMEOUT_MS = 60_000;
 
 const extraRoutes = process.argv.flatMap((a, i, all) =>
