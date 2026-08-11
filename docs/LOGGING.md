@@ -64,3 +64,29 @@ Axiom free tier: 500GB/mo, 30-day retention. Setup:
 - no logging inside hot loops
 - no duplicate failure messages at multiple layers
 - no swallowing errors without logging
+
+## 9) Production troubleshooting
+
+Vercel exposes two different log surfaces — use the right one:
+
+| Goal                        | Command                                      |
+| --------------------------- | -------------------------------------------- |
+| Runtime (requests, crashes) | `npx vercel logs yagyu.app`                  |
+| Build / deploy compile logs | `npx vercel inspect <deployment-url> --logs` |
+
+`vercel inspect --logs` is **build-only**. Cold-start and request failures
+show up only in runtime logs.
+
+Plain-text body `A server error has occurred` with header
+`x-vercel-error: FUNCTION_INVOCATION_FAILED` means the Node process crashed
+before Nest's JSON exception filter could run (module load or bootstrap).
+The SPA client used to surface this as `Unexpected token 'A'... is not valid
+JSON` — `apiRequest` now reports status + body preview + the Vercel error
+header instead.
+
+A common cold-start crash on this API is ESM/CJS interop (`ERR_REQUIRE_ESM`)
+when Nest's CommonJS emit statically `require()`s ESM-only `ai` /
+`@ai-sdk/*`. See Key Invariants in `ARCHITECTURE.md` (`importEsm`).
+
+When pasting logs into chat or tickets: never include secret values, tokens,
+connection strings, or full env dumps — redact first.

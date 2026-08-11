@@ -1,9 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createAnthropic } from '@ai-sdk/anthropic';
-import { createOpenAI } from '@ai-sdk/openai';
-import { createProviderRegistry, generateObject, streamText } from 'ai';
 import type { ModelMessage } from 'ai';
 import type { ZodType } from 'zod';
+import { importEsm } from './import-esm.js';
 
 export interface StructuredGeneration<T> {
   object: T;
@@ -24,26 +22,50 @@ export interface StructuredGenerationOptions<T> {
   promptVersion: string;
 }
 
+type AiSdk = typeof import('ai');
+type AnthropicSdk = typeof import('@ai-sdk/anthropic');
+type OpenAiSdk = typeof import('@ai-sdk/openai');
+type ProviderRegistry = ReturnType<AiSdk['createProviderRegistry']>;
+
+// Nest emits CommonJS for the Vercel `api/index.js` require() entry. `ai` and
+// `@ai-sdk/*` are ESM-only — a static import (or tsc-rewritten import()) becomes
+// require() and crashes cold start with ERR_REQUIRE_ESM. Load via importEsm.
+async function loadRegistry(): Promise<{ registry: ProviderRegistry; ai: AiSdk }> {
+  const [anthropic, openai, ai] = await Promise.all([
+    importEsm<AnthropicSdk>('@ai-sdk/anthropic'),
+    importEsm<OpenAiSdk>('@ai-sdk/openai'),
+    importEsm<AiSdk>('ai'),
+  ]);
+  return {
+    ai,
+    registry: ai.createProviderRegistry({
+      anthropic: anthropic.createAnthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] }),
+      openai: openai.createOpenAI({ apiKey: process.env['OPENAI_API_KEY'] }),
+    }),
+  };
+}
+
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
+  private sdkPromise: Promise<{ registry: ProviderRegistry; ai: AiSdk }> | undefined;
 
-  private readonly registry = createProviderRegistry({
-    anthropic: createAnthropic({ apiKey: process.env['ANTHROPIC_API_KEY'] }),
-    openai: createOpenAI({ apiKey: process.env['OPENAI_API_KEY'] }),
-  });
+  private loadSdk(): Promise<{ registry: ProviderRegistry; ai: AiSdk }> {
+    this.sdkPromise ??= loadRegistry();
+    return this.sdkPromise;
+  }
 
-  stream(messages: ModelMessage[]): ReturnType<typeof streamText> {
+  async stream(messages: ModelMessage[]): Promise<ReturnType<AiSdk['streamText']>> {
+    const { registry, ai } = await this.loadSdk();
     const modelId = process.env['DEFAULT_AI_MODEL'] ?? 'anthropic:claude-3-5-sonnet-20241022';
-    const model = this.registry.languageModel(
-      modelId as `anthropic:${string}` | `openai:${string}`,
-    );
-    return streamText({ model, messages });
+    const model = registry.languageModel(modelId as `anthropic:${string}` | `openai:${string}`);
+    return ai.streamText({ model, messages });
   }
 
   async generateStructured<T>(
     options: StructuredGenerationOptions<T>,
   ): Promise<StructuredGeneration<T>> {
+    const { registry, ai } = await this.loadSdk();
     const modelId =
       options.model ?? process.env['DEFAULT_AI_MODEL'] ?? 'anthropic:claude-3-5-sonnet-20241022';
     const startedAt = Date.now();
@@ -57,13 +79,13 @@ export class AiService {
       object: unknown;
       usage: { inputTokens?: number; outputTokens?: number };
     };
-    const generateStructuredObject = generateObject as unknown as (
+    const generateStructuredObject = ai.generateObject as unknown as (
       call: Record<string, unknown>,
     ) => Promise<StructuredResult>;
     let result: StructuredResult;
     try {
       result = await generateStructuredObject({
-        model: this.registry.languageModel(modelId as `anthropic:${string}` | `openai:${string}`),
+        model: registry.languageModel(modelId as `anthropic:${string}` | `openai:${string}`),
         schema: options.schema,
         system: options.system,
         prompt: options.prompt,

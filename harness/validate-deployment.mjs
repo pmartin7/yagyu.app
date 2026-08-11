@@ -6,10 +6,15 @@
  * live sites serve a working app (not an error page or a blank page):
  *   1. Vercel API: latest production + staging-branch deployments are READY
  *   2. HTTP: production URLs respond and serve the app shell
- *   3. Visual: production renders real content (screenshot in harness/artifacts/)
+ *   3. HTTP: production `/api/health` returns 200 JSON `{ status: 'ok' }`
+ *   4. Visual: production renders real content (screenshot in harness/artifacts/)
  *
  * Staging is behind Vercel deployment protection (SSO), so it is checked at
  * the deployment-state level, and its URL check accepts the SSO redirect.
+ *
+ * If `/api/health` returns plain text / FUNCTION_INVOCATION_FAILED, pull
+ * runtime logs with `npx vercel logs yagyu.app` (not `vercel inspect --logs`,
+ * which is build-only) and look for `ERR_REQUIRE_ESM`.
  *
  * Usage: node harness/validate-deployment.mjs
  * Exit codes: 0 = deployments healthy, 1 = failures, 2 = harness could not run.
@@ -166,6 +171,59 @@ async function main() {
   await httpCheck(PRODUCTION_URL);
   await httpCheck(PRODUCTION_DOMAIN, { soft: true });
   await httpCheck(STAGING_URL, { allowSso: true });
+
+  // 2b. API health — SPA 200 alone misses a dead Nest/lambda cold start
+  const RUNTIME_LOGS_REMEDIATION =
+    'Remediation: npx vercel logs yagyu.app (runtime — look for ERR_REQUIRE_ESM / FUNCTION_INVOCATION_FAILED). ' +
+    '`npx vercel inspect <url> --logs` is build-only.';
+
+  const healthCheck = async (baseUrl, { soft = false } = {}) => {
+    const url = `${baseUrl.replace(/\/$/, '')}/api/health`;
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+      const vercelError = res.headers.get('x-vercel-error');
+      const text = await res.text();
+      let body;
+      try {
+        body = JSON.parse(text);
+      } catch {
+        const detail = [
+          `HTTP ${res.status}`,
+          vercelError,
+          text.replace(/\s+/g, ' ').trim().slice(0, 80) || 'empty body',
+        ]
+          .filter(Boolean)
+          .join(', ');
+        const msg = `${url}: non-JSON health response (${detail})`;
+        if (soft) console.log(`WARN ${msg} (soft check — DNS may not have propagated yet)`);
+        else {
+          failures.push(msg);
+          console.log(`FAIL ${msg}. ${RUNTIME_LOGS_REMEDIATION}`);
+        }
+        return;
+      }
+      if (res.status === 200 && body?.status === 'ok') {
+        console.log(`PASS ${url}: 200, status ok`);
+        return;
+      }
+      const msg = `${url}: HTTP ${res.status}, body status=${body?.status ?? 'missing'}`;
+      if (soft) console.log(`WARN ${msg} (soft check — DNS may not have propagated yet)`);
+      else {
+        failures.push(msg);
+        console.log(`FAIL ${msg}. ${RUNTIME_LOGS_REMEDIATION}`);
+      }
+    } catch (err) {
+      const msg = `${url}: unreachable (${err.cause?.code ?? err.message})`;
+      if (soft) console.log(`WARN ${msg} (soft check — DNS may not have propagated yet)`);
+      else {
+        failures.push(msg);
+        console.log(`FAIL ${msg}. ${RUNTIME_LOGS_REMEDIATION}`);
+      }
+    }
+  };
+
+  await healthCheck(PRODUCTION_URL);
+  await healthCheck(PRODUCTION_DOMAIN, { soft: true });
 
   // 3. Visual check on production: catches the blank-page class of failures
   try {

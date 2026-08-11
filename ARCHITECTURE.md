@@ -255,6 +255,12 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - A green migration does not finish runtime bootstrap: roles created as
   `NOLOGIN` (e.g. `worker_user`) still need a one-time login password and
   `NEON_WORKER_DATABASE_URL` via `pnpm db:provision-worker`.
+- Nest API dist is CommonJS (required by `api/index.js` on Vercel). Packages
+  that are ESM-only (`ai`, `@ai-sdk/*`) must be loaded through `importEsm()`
+  in `apps/api/src/ai/import-esm.ts` (a native dynamic `import` that tsc cannot
+  rewrite). A static import — or a source-level `import()` that CommonJS emit
+  turns into `require()` — crashes every cold start with `ERR_REQUIRE_ESM` /
+  `FUNCTION_INVOCATION_FAILED`, including `/api/health`.
 - Sub-daily schedules must not be added to `vercel.json` while the project is
   on a Hobby plan — Hobby rejects those crons at deploy time. Use
   `.github/workflows/email-sync-drain.yml` instead.

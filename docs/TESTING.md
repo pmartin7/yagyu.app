@@ -89,7 +89,7 @@ values (Keychain / `.env` / Vercel / GitHub env only).
 | `pnpm db:provision-worker`   | Enable `worker_user` login; set `NEON_WORKER_DATABASE_URL`                |
 | `pnpm redeploy:env`          | Redeploy latest Production + Preview after env edits                      |
 | `pnpm check:branch-sync`     | Compare local / `origin/staging` / `origin/main` tips                     |
-| `pnpm validate:deploy`       | Vercel auth + required env names + READY deploys + HTTP/visual            |
+| `pnpm validate:deploy`       | Vercel auth + env names + READY deploys + SPA HTTP/visual + `/api/health` |
 | `pnpm bench:triage`          | Single model/stack triage accuracy/cost run                               |
 | `pnpm bench:triage:matrix`   | Small frozen-prompt matrix; logs in `harness/artifacts/`                  |
 
