@@ -57,7 +57,7 @@ export class AiService {
       object: unknown;
       usage: { inputTokens?: number; outputTokens?: number };
     };
-    const generateStructuredObject = generateObject as (
+    const generateStructuredObject = generateObject as unknown as (
       call: Record<string, unknown>,
     ) => Promise<StructuredResult>;
     let result: StructuredResult;
