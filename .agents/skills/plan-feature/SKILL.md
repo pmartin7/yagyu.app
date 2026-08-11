@@ -53,6 +53,19 @@ Delegate to staff-engineer agent (Mode B):
 
 Apply the staff-engineer's edits to the plan.
 
+## Phase 2b — AI Engineer Audit (conditional)
+
+Only when the plan touches the AI stack (prompts, model selection,
+`apps/api/src/ai/`, structured-output schemas, retrieval/embeddings), delegate
+to the ai-engineer agent (Mode A):
+
+- Provide the AI-relevant sections of the plan
+- The agent audits for accuracy, token efficiency, and latency/cost, and names
+  the trade-offs
+
+Apply the ai-engineer's edits to the plan. Skip this phase entirely for plans
+that don't touch the AI stack.
+
 ## Phase 3 — Present
 
 Show the final audited plan to the user. Ask: "Ready to build? Run /build-plan to implement this plan."

@@ -13,11 +13,10 @@ apps/web         Marketing/landing + login site on Vercel
 packages/shared  Zod schemas shared by api + mobile (+ web)
 ```
 
-`apps/mobile` and email ingestion are intentionally **not scaffolded yet**. Add
-them via `/research-feature` → `/plan-feature` → `/build-plan` so feature work
-follows these guardrails. The Vercel AI SDK integration lives in
-`apps/api/src/ai` and is reused for triage, summarization, and recommended
-actions (Anthropic / Claude).
+`apps/mobile` is intentionally **not scaffolded yet**. Email ingestion and task
+triage live in `apps/api`; the responsive `/tasks` web experience is the first
+client for that domain. The Vercel AI SDK integration lives in `apps/api/src/ai`
+and is reused by the scoped triage agents (Anthropic / OpenAI).
 
 ### Screen Map (apps/mobile — implemented later)
 
@@ -33,14 +32,14 @@ actions (Anthropic / Claude).
 
 ### Route Map (apps/web)
 
-| Route         | Page                    | Guard                                         |
-| ------------- | ----------------------- | --------------------------------------------- |
-| /             | Landing page            | `PublicRoute` — signed-in visitors redirected |
-| /login        | Sign in / sign up       | `PublicRoute` — signed-in visitors redirected |
-| /verify-email | Awaiting verification   | none — owns its own redirects                 |
-| /welcome      | Post-signup onboarding  | `ProtectedRoute` — signed in **and** verified |
-| /settings     | Linked Gmail accounts   | `ProtectedRoute` — signed in **and** verified |
-| /tasks        | Todo list (empty state) | `ProtectedRoute` — signed in **and** verified |
+| Route         | Page                   | Guard                                         |
+| ------------- | ---------------------- | --------------------------------------------- |
+| /             | Landing page           | `PublicRoute` — signed-in visitors redirected |
+| /login        | Sign in / sign up      | `PublicRoute` — signed-in visitors redirected |
+| /verify-email | Awaiting verification  | none — owns its own redirects                 |
+| /welcome      | Post-signup onboarding | `ProtectedRoute` — signed in **and** verified |
+| /settings     | Linked Gmail accounts  | `ProtectedRoute` — signed in **and** verified |
+| /tasks        | Ranked task list       | `ProtectedRoute` — signed in **and** verified |
 
 Guards live in `apps/web/src/features/auth/`. `PublicRoute` sends an
 authenticated visitor to `/welcome`, or to `/verify-email` when unverified, and
@@ -88,38 +87,69 @@ All entities extend `BaseEntity`.
 
 ```
 BaseEntity (abstract): id (UUID), createdAt, updatedAt
-├── User: firebaseUid, email, displayName (nullable),
-│     pushToken (nullable — added when push notifications are built)
-├── EmailAccount (implemented): provider (enum: gmail), emailAddress,
-│     encryptedRefreshToken (AES-256-GCM, hidden from serialization), user (FK)
-│     — unique (user, emailAddress); outlook + displayName, syncCursor, status
-│       are added when email sync is built
-├── EmailMessage: providerMessageId, threadId, emailAccount (FK), sender,
-│     subject, snippet, receivedAt, isRead, priorityScore (float),
-│     needsAction (bool), aiSummary (text, nullable),
-│     aiRecommendedActions (jsonb, nullable), category (FK, nullable), user (FK)
-├── Category: name, isDynamic (bool), color, sortOrder, user (FK)
-└── Todo: title, notes (nullable), status (enum: open | done | snoozed),
-      dueDate (nullable), source (enum: email | manual), category (FK),
-      contextSummary, recommendedActions
+├── User: firebaseUid, email, displayName (nullable)
+├── EmailAccount: provider (gmail), emailAddress, encryptedRefreshToken
+│     (AES-256-GCM, hidden), syncCursor, lastSyncedAt,
+│     initialSyncCompletedAt, watchExpiresAt, syncStatus, user (FK)
+│     — unique (user, emailAddress)
+├── EmailMessage: providerMessageId, threadId, sender, subject, snippet,
+│     bodyText, receivedAt, analysisStatus, emailAccount (FK), user (FK)
+│     — unique (emailAccount, providerMessageId)
+├── SyncJob: kind (backfill | incremental | analyze | reanalyze), status,
+│     attempts, runAfter, leasedUntil, checkpoint (jsonb), lastError,
+│     emailAccount (FK)
+├── Category: name, summary, managedBy (ai | user),
+│     rankingMode (ai | manual), sortOrder, user (FK)
+├── Task: title, status (open | done), dueDate (date-only), priority,
+│     stackRank, managedBy (ai | user), aiContext, aiRecommendedAction,
+│     category (FK), user (FK)
+│   ├── TaskNextStep: title, completedAt, sortOrder, task (FK)
+│   ├── TaskNote: body, task (FK), user (FK) — append-only
+│   └── TaskEmail: task (FK), email (FK), linkedBy (ai | user)
+│         — unique (task, email)
+└── AutomationRun: stage (screen | route | write), promptVersion, model,
+      generationConfig (jsonb), tokensIn, tokensOut, latencyMs,
+      appliedChanges (jsonb), user (FK), email (nullable FK),
+      task (nullable FK) — append-only
 ```
 
-`User` and `EmailAccount` exist in code today; the other entities are added as
-their features are built. Keep this model as the reference when adding them.
+Task membership is `Category → Task → TaskEmail → EmailMessage`. A task belongs
+to exactly one category; one email can link to several tasks. `EmailMessage`
+does not carry a category foreign key because category membership derives
+through its linked tasks.
 
 ### Data Flow
 
 ```
-Auth:    Client (mobile/web) → Firebase SDK → JWT → API Guard → verify JWT +
-         require email_verified claim → RLS interceptor (tx + set_config) →
-         getOrCreate User (displayName from the token's `name` claim)
-Sync:    Provider (Gmail/Outlook) → apps/api email sync → EmailMessage rows (per EmailAccount syncCursor)
-Triage:  New EmailMessage → AI SDK (Anthropic) → priorityScore, needsAction, aiSummary,
-         aiRecommendedActions, dynamic Category assignment
-Todos:   EmailMessage (Needs Action) → auto-generated Todo | manual Todo → CRUD via /api/todos
-Push:    apps/api → expo-notifications (User.pushToken) → mobile device
-CRUD:    Client → fetch → /api/{resource} → Guard → Service → MikroORM → Neon Postgres
+Auth:   Client → Firebase SDK → JWT → API Guard → email_verified check →
+        RLS interceptor (tx + set_config) → getOrCreate User
+Sync:   Gmail Pub/Sub push OR 10-minute Vercel cron → idempotent SyncJob →
+        leased worker batch → Gmail REST → EmailMessage rows + syncCursor
+Triage: analyze/reanalyze SyncJob → parallel per-email Screeners →
+        one structure-only Router per actionable slice →
+        parallel per-touched-task Writers → deterministic category Ranker
+Tasks:  Web → /api/tasks + /api/categories → RLS-bound TasksService →
+        ranked Task graph; note append enqueues targeted writer-only reanalysis
 ```
+
+The same Postgres ledger owns sync and triage work. A claim commits a 90-second
+lease before external work starts; each bounded batch persists a checkpoint.
+The cron drain self-chains while ready jobs remain. Gmail history expiry falls
+back to a bounded 60-day resync. Pub/Sub is optional: without its configuration,
+the cron remains a complete polling path.
+
+The triage prompts are separate, versioned modules with a static system-prefix
+followed by variable context. Each agent resolves its model independently:
+`AI_MODEL_SCREEN`, `AI_MODEL_ROUTE`, and `AI_MODEL_WRITE` override
+`DEFAULT_AI_MODEL` only for that stage. Each prompt module also owns its bounded
+generation settings (`maxOutputTokens`), so the benchmark and production use the
+exact same prompt/model/config combination. Do not change a stage model or
+generation config without a `pnpm bench:triage` before/after on the fixture set —
+the last measured winners were `openai:gpt-5.6-luna` for screen, route, and write.
+`AutomationRun` records each call's stage, prompt version, model, generation
+config, usage, latency, and applied changes. Screen and route email bodies are
+explicitly truncated, and Writer context is capped to 20 linked-email digests,
+full text only for newly linked messages, and the 10 most recent notes.
 
 ### Deployment & Environments
 
@@ -137,6 +167,12 @@ One Neon Postgres project with three database branches mirroring the git flow:
   environments.
 - Vercel runtime uses a **pooled** `NEON_APP_DATABASE_URL` (`-pooler` host);
   migrations use the **direct** owner `NEON_DATABASE_URL`.
+- Background sync and triage lazily open a pool-max-1
+  `NEON_WORKER_DATABASE_URL` connection as `worker_user`. Ordinary user traffic
+  never initializes this connection. The migration creates `worker_user` as
+  `NOLOGIN NOBYPASSRLS`; each environment must run
+  `alter role worker_user with login password '<generated>';` once before
+  setting the URL.
 - `.github/workflows/ci.yml` — format check + lint + type-check + tests on every
   push/PR to `staging`/`main`.
 - `.github/workflows/migrate.yml` — on push to `staging`/`main`, applies pending
@@ -152,6 +188,12 @@ One Neon Postgres project with three database branches mirroring the git flow:
   `index.html` (SPA fallback). ORM entities are registered statically in
   `mikro-orm.config.ts` — the function bundler only includes files reachable
   through imports, so glob discovery must not be reintroduced.
+- Vercel Cron invokes `GET /api/internal/sync/run` every 10 minutes and requires
+  `CRON_SECRET`; authenticated self-chaining uses POST. Both hand bounded drain
+  work to Vercel `waitUntil` before returning. Gmail push additionally requires
+  `GOOGLE_PUBSUB_TOPIC` and a push subscription whose OIDC identity matches
+  `PUBSUB_PUSH_SERVICE_ACCOUNT`. The cron requires a Vercel plan that supports
+  this schedule.
 - `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
   permanently redirected to `yagyu.app`. The authoritative redirect is the
   **project domain redirect** (`redirect=yagyu.app`, status 308) — the same
@@ -188,6 +230,26 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   from `user.emailVerified` (see Authentication & Email Verification)
 - The web route map above and `apps/web/src/app/router.tsx` are one system —
   `pnpm docs:check` fails when they drift
+- An email-account cursor advances only in the transaction that persisted the
+  corresponding message batch.
+- Worker claims commit their lease before work begins; every batch checkpoints
+  under the 30-second function limit and must be safe to resume.
+- AI never reopens a user-completed task or overwrites a user-managed field.
+  The first manual rank write permanently switches that category's
+  `rankingMode` from `ai` to `manual`.
+- Task notes are append-only and trigger targeted reanalysis.
+- A note-triggered `reanalyze` job invokes Writer directly for its task. It does
+  not re-screen mail or ask Router to change task/category/link structure.
+- Router owns structure (categories, tasks, links); Writer owns task content
+  (title, context, recommended action, next steps, due date, priority). Neither
+  stage may cross that boundary.
+- Every Router id is accepted only when it appeared in the exact digest sent to
+  that call. Zod proves shape; the apply step proves referential grounding.
+- Prompt system prefixes remain static and precede variable context so provider
+  prompt caching remains effective.
+- Model changes are stage-local and prompt-frozen: evaluate a candidate through
+  `bench:triage` before changing that stage's prompt or generation settings.
+  Any prompt or generation-config change must bump that stage's prompt version.
 
 ### Row-Level Security
 

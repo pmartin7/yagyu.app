@@ -40,10 +40,12 @@ Tokens live in `apps/web/src/styles/globals.css` (`@theme`).
 Rules:
 
 - Primary is for interactive elements only — never backgrounds, never body text.
+- AI-generated recommendations may use primary as a thin edge or kicker accent,
+  never as a filled surface or paragraph color.
 - **Seal vs destructive:** seal (vermilion) is decorative brand identity — the
   hanko mark, never CTAs, never text that carries meaning. Destructive is for
-  error states in forms/actions. They are adjacent reds by design; they must
-  never appear in the same context.
+  error states in forms/actions and overdue or blocking task states. They are
+  adjacent reds by design; they must never appear in the same context.
 - At most one `ink-section` dark band per page (CTA/footer). Dark is the
   accent, not the default.
 
@@ -90,11 +92,34 @@ Every authenticated page (`/welcome`, `/settings`, `/tasks`) renders inside
 `AppLayout` alongside a persistent nav panel (`apps/web/src/components/side-
 panel.tsx`): a "Tasks" link, a static "Sources" section listing linked email
 accounts, and a "Settings" link pinned to the bottom. The same `SidePanel` is
-mounted exactly once per render — as a fixed-width `<aside>` at `lg:` and up,
-or inside a `Sheet` (`apps/web/src/components/ui/sheet.tsx`, a controlled
-Radix Dialog) below it — chosen by a `min-width: 1024px` media query, never
-both at once via CSS-hiding one copy. Add new authenticated-app nav items to
-`SidePanel`, not to individual pages.
+mounted exactly once per render and is always right-anchored — as a fixed-width
+`<aside>` at `lg:` and up, or inside a right-side `Sheet`
+(`apps/web/src/components/ui/sheet.tsx`, a controlled Radix Dialog) below it —
+chosen by a `min-width: 1024px` media query, never both at once via CSS-hiding
+one copy. Add new authenticated-app nav items to `SidePanel`, not to individual
+pages.
+
+### Task cards
+
+The task list is rank-ordered and optimized for one-handed scanning. A collapsed
+card shows one muted mono category kicker, the task title, and only actionable
+metadata (due date, next-step progress, note count). Completion and expansion
+controls have at least 44px hit areas. Expanded sections align to the card's
+mobile padding rather than using a fixed desktop indent.
+
+AI context is ordinary ink text. A recommended action may use a thin primary
+edge to identify generated guidance without turning the card into an indigo
+surface. Overdue dates use destructive. Completed tasks remain fully opaque in
+`ink-muted` with a strikethrough; low-opacity text is not a completion state.
+
+### Task note composer
+
+The default state is a full-width, 44px "Add a note" row. Activating it expands
+in place to an autosizing, full-width textarea with a Cancel/Save action row
+beneath it at every breakpoint. Never place a narrow textarea and submit button
+side by side. After save, the note timestamp may be followed by sentence-case
+`ink-muted` text reading "Re-analysis queued"; this status is body UI, not a
+second mono kicker.
 
 ## 6) Responsive
 

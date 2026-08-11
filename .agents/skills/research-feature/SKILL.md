@@ -54,4 +54,7 @@ Delegate to staff-engineer agent (Mode A):
 - Provide all options
 - Provide the path to the relevant evaluation-criteria.md file: `.agents/skills/research-feature/references/evaluation-criteria.md`
 
+When the options involve LLM calls, prompts, or model selection, also delegate
+the AI-relevant parts to the ai-engineer agent (Mode A) and merge both reviews.
+
 Present the staff-engineer's recommendation to the user with a short explanation.

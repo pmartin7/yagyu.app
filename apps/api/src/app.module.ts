@@ -9,6 +9,9 @@ import { UsersModule } from './users/users.module.js';
 import { EmailAccountsModule } from './email-accounts/email-accounts.module.js';
 import { AiModule } from './ai/ai.module.js';
 import { HealthModule } from './health/health.module.js';
+import { EmailSyncModule } from './email-sync/email-sync.module.js';
+import { TriageModule } from './triage/triage.module.js';
+import { TasksModule } from './tasks/tasks.module.js';
 
 @Module({
   imports: [
@@ -30,6 +33,9 @@ import { HealthModule } from './health/health.module.js';
     EmailAccountsModule,
     AiModule,
     HealthModule,
+    EmailSyncModule,
+    TriageModule,
+    TasksModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

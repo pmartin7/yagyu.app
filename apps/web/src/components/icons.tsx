@@ -62,3 +62,28 @@ export function SyncIcon(props: IconProps): JSX.Element {
     </svg>
   );
 }
+
+export function ChevronDownIcon(props: IconProps): JSX.Element {
+  return (
+    <svg {...baseProps(props)}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+export function CheckIcon(props: IconProps): JSX.Element {
+  return (
+    <svg {...baseProps(props)}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+export function PlusIcon(props: IconProps): JSX.Element {
+  return (
+    <svg {...baseProps(props)}>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}

@@ -151,6 +151,7 @@ They now say so explicitly instead of re-downloading the browser.
 | create-pr-description | /create-pr        | PR description from git diff                                |
 | add-vector-store      | /add-vector-store | Wire Turbopuffer vector search                              |
 | add-blob-storage      | /add-blob-storage | Wire Vercel Blob file storage                               |
+| optimize-ai           | /optimize-ai      | Benchmark + optimize AI models, prompts, and configuration  |
 | validate-app          | /validate-app     | Visual local validation + deployment verification harnesses |
 | release               | /release          | Promote work local → staging → main with gates at each step |
 

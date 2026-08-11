@@ -1,14 +1,19 @@
-import { Card } from '../components/ui/card.js';
+import { TaskList } from '../features/tasks/task-list.js';
 
 export function TasksPage(): JSX.Element {
   return (
-    <div className="flex-1 flex items-center justify-center px-4 py-16">
-      <Card className="w-full max-w-sm p-8 text-center">
-        <h1 className="font-display text-2xl font-semibold text-ink tracking-tight">No tasks</h1>
-        <p className="mt-3 text-ink-muted leading-relaxed">
-          Todos generated from your inbox will show up here.
-        </p>
-      </Card>
+    <div className="flex-1 px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-3xl">
+        <header className="mb-7">
+          <p className="font-mono text-[0.6875rem] font-medium uppercase tracking-[0.25em] text-ink-muted">
+            Your focus
+          </p>
+          <h1 className="mt-2 font-display text-2xl font-semibold tracking-tight text-ink">
+            Tasks
+          </h1>
+        </header>
+        <TaskList />
+      </div>
     </div>
   );
 }

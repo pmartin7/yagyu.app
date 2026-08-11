@@ -14,6 +14,7 @@ export const EnvSchema = z.object({
   // credential (API runtime)
   NEON_DATABASE_URL: z.string().url(),
   NEON_APP_DATABASE_URL: z.string().url(),
+  NEON_WORKER_DATABASE_URL: z.string().url(),
 
   // Firebase Admin SDK
   FIREBASE_PROJECT_ID: z.string().min(1),
@@ -24,6 +25,9 @@ export const EnvSchema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   DEFAULT_AI_MODEL: z.string().min(1),
+  AI_MODEL_SCREEN: z.string().min(1).optional(),
+  AI_MODEL_ROUTE: z.string().min(1).optional(),
+  AI_MODEL_WRITE: z.string().min(1).optional(),
 
   // Google OAuth (Gmail account linking)
   GOOGLE_CLIENT_ID: z.string().min(1),
@@ -35,6 +39,11 @@ export const EnvSchema = z.object({
       (value) => base64DecodedByteLength(value) === 32,
       'TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte key (e.g. openssl rand -base64 32)',
     ),
+
+  // Email sync triggers
+  CRON_SECRET: z.string().min(32),
+  GOOGLE_PUBSUB_TOPIC: z.string().min(1).optional(),
+  PUBSUB_PUSH_SERVICE_ACCOUNT: z.string().email().optional(),
 
   // Observability (optional)
   AXIOM_TOKEN: z.string().optional(),

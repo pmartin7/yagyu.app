@@ -8,6 +8,12 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/internal/sync/run",
+      "schedule": "*/10 * * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/:path*",

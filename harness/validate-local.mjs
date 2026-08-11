@@ -114,6 +114,17 @@ async function main() {
             'blank page: #root is empty. The JS bundle likely threw at startup — check the console errors above.',
           );
         }
+        // In an authenticated browser, /tasks must render the feature region,
+        // not merely non-empty app chrome. The default harness is signed out,
+        // so the expected guard redirect is verified by the route smoke test.
+        if (route === '/tasks' && new URL(page.url()).pathname === '/tasks') {
+          const taskListRegion = await page.locator('[data-testid="task-list-region"]').count();
+          if (taskListRegion !== 1) {
+            problems.push(
+              'tasks page did not render exactly one [data-testid="task-list-region"] feature region',
+            );
+          }
+        }
         await page.screenshot({ path: shot, fullPage: true });
       } catch (err) {
         problems.push(`navigation failed: ${err.message}`);

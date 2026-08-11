@@ -3,6 +3,7 @@ import { BaseEntity } from '../../common/entities/base.entity.js';
 import { User } from '../../users/entities/user.entity.js';
 
 export type EmailAccountProvider = 'gmail';
+export type EmailAccountSyncStatus = 'idle' | 'syncing' | 'error' | 'reauth_required';
 
 @Entity()
 @Unique({ properties: ['user', 'emailAddress'] })
@@ -17,6 +18,24 @@ export class EmailAccount extends BaseEntity {
   // the 255-char default column, so store as text.
   @Property({ hidden: true, type: 'text' })
   encryptedRefreshToken!: string;
+
+  @Property({ nullable: true })
+  syncCursor: string | null = null;
+
+  @Property({ nullable: true })
+  lastSyncedAt: Date | null = null;
+
+  @Property({ nullable: true })
+  initialSyncCompletedAt: Date | null = null;
+
+  @Property({ nullable: true })
+  watchExpiresAt: Date | null = null;
+
+  @Enum({
+    items: () => ['idle', 'syncing', 'error', 'reauth_required'],
+    default: 'idle',
+  })
+  syncStatus: EmailAccountSyncStatus & Opt = 'idle';
 
   @ManyToOne(() => User)
   user!: User;

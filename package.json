@@ -11,6 +11,7 @@
     "docs:check": "node harness/check-docs-sync.mjs",
     "validate:local": "node harness/validate-local.mjs",
     "validate:deploy": "node harness/validate-deployment.mjs",
+    "bench:triage": "pnpm --filter @morpheus/shared build && pnpm --filter @morpheus/api build && node harness/bench-triage.mjs",
     "playwright:install": "node harness/install-browsers.mjs",
     "test": "turbo test",
     "format": "prettier --write .",
