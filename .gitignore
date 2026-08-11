@@ -18,6 +18,8 @@ coverage/
 # mikro-orm
 .mikro-orm/
 migrations/*.js
+# Schema snapshots are machine-local; regenerating them on migrate creates noise.
+**/migrations/.snapshot-*.json
 
 # editor
 .DS_Store
