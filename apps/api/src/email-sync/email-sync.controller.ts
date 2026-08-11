@@ -68,8 +68,8 @@ export class EmailSyncController {
     return { accepted: true };
   }
 
-  // Vercel Cron invokes configured paths with GET. POST remains available for
-  // authenticated self-chaining and manual operational drains.
+  // The scheduled drain (GitHub Actions) invokes this path with GET. POST
+  // remains available for authenticated self-chaining and manual drains.
   @Get('sync/run')
   @UseGuards(CronSecretGuard)
   async runScheduledSync(
