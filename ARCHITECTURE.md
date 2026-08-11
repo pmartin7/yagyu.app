@@ -123,7 +123,7 @@ through its linked tasks.
 ```
 Auth:   Client → Firebase SDK → JWT → API Guard → email_verified check →
         RLS interceptor (tx + set_config) → getOrCreate User
-Sync:   Gmail Pub/Sub push OR 10-minute Vercel cron → idempotent SyncJob →
+Sync:   Gmail Pub/Sub push OR 10-minute GitHub Actions drain → idempotent SyncJob →
         leased worker batch → Gmail REST → EmailMessage rows + syncCursor
 Triage: analyze/reanalyze SyncJob → parallel per-email Screeners →
         one structure-only Router per actionable slice →
@@ -188,12 +188,14 @@ One Neon Postgres project with three database branches mirroring the git flow:
   `index.html` (SPA fallback). ORM entities are registered statically in
   `mikro-orm.config.ts` — the function bundler only includes files reachable
   through imports, so glob discovery must not be reintroduced.
-- Vercel Cron invokes `GET /api/internal/sync/run` every 10 minutes and requires
-  `CRON_SECRET`; authenticated self-chaining uses POST. Both hand bounded drain
-  work to Vercel `waitUntil` before returning. Gmail push additionally requires
-  `GOOGLE_PUBSUB_TOPIC` and a push subscription whose OIDC identity matches
-  `PUBSUB_PUSH_SERVICE_ACCOUNT`. The cron requires a Vercel plan that supports
-  this schedule.
+- GitHub Actions (`.github/workflows/email-sync-drain.yml`) invokes
+  `GET /api/internal/sync/run` every 10 minutes against staging and production,
+  authenticating with each environment's `CRON_SECRET`. Authenticated
+  self-chaining uses POST. Both hand bounded drain work to Vercel `waitUntil`
+  before returning. Do not put a sub-daily schedule in `vercel.json` while the
+  project is on a Hobby plan — Hobby rejects those crons at deploy time. Gmail
+  push additionally requires `GOOGLE_PUBSUB_TOPIC` and a push subscription whose
+  OIDC identity matches `PUBSUB_PUSH_SERVICE_ACCOUNT`.
 - `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
   permanently redirected to `yagyu.app`. The authoritative redirect is the
   **project domain redirect** (`redirect=yagyu.app`, status 308) — the same

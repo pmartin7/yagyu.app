@@ -1,0 +1,45 @@
+# Hobby Vercel plans cannot schedule sub-daily crons. Drive the same
+# /api/internal/sync/run drain from GitHub Actions every 10 minutes instead.
+name: Email sync drain
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  drain-staging:
+    name: Drain staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Invoke sync drain
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SYNC_URL: https://staging.yagyu.app/api/internal/sync/run
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not configured in the staging GitHub environment"
+            exit 1
+          fi
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "$SYNC_URL"
+
+  drain-production:
+    name: Drain production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Invoke sync drain
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          SYNC_URL: https://yagyu.app/api/internal/sync/run
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not configured in the production GitHub environment"
+            exit 1
+          fi
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "$SYNC_URL"
