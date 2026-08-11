@@ -69,12 +69,19 @@ pnpm docs:check   # assert routes/entities/env vars still match the docs
 pnpm format       # prettier --write (also runs on save + pre-commit + CI check)
 pnpm validate:local   # boot + drive web app headlessly, screenshots → harness/artifacts/
 pnpm validate:deploy  # verify Vercel deployments are READY and live site renders
+pnpm check:branch-sync # local HEAD vs origin/staging vs origin/main
+pnpm secrets:check / secrets:sync  # Keychain ↔ .env/Vercel/GitHub env (no secret echo)
+pnpm db:provision-worker           # worker_user login + NEON_WORKER_DATABASE_URL
+pnpm redeploy:env                  # refresh deploys after Vercel env edits
+pnpm bench:triage / bench:triage:matrix
 pnpm playwright:install  # one-time Chromium install for the harnesses
 ```
 
 The Playwright harnesses need real permissions: Chromium segfaults inside the
 agent sandbox, so run `validate:local` / `validate:deploy` with full permissions.
-They now say so explicitly instead of re-downloading the browser.
+They now say so explicitly instead of re-downloading the browser. Ops harnesses
+that touch Keychain/Vercel/Neon also need full permissions and must never print
+secret values.
 
 ## 4) Stack
 

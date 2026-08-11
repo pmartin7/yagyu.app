@@ -14,12 +14,11 @@
  * Usage: node harness/validate-deployment.mjs
  * Exit codes: 0 = deployments healthy, 1 = failures, 2 = harness could not run.
  */
-import { readFileSync } from 'fs';
 import { mkdirSync } from 'fs';
-import { homedir } from 'os';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { launchChromium } from './lib/browser.mjs';
+import { assertVercelToken, listVercelEnvNames, loadVercelAuth } from './lib/secrets.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const ARTIFACTS = resolve(ROOT, 'harness/artifacts');
@@ -30,26 +29,16 @@ const STAGING_URL = 'https://yagyu-app-staging.vercel.app';
 const STAGING_BRANCH = 'staging';
 const TITLE_MARKER = 'yagyu.app';
 
+/** Env names that must exist on Preview + Production after triage/sync bootstrap. */
+const REQUIRED_ENV = [
+  'CRON_SECRET',
+  'NEON_WORKER_DATABASE_URL',
+  'DEFAULT_AI_MODEL',
+  'OPENAI_API_KEY',
+];
+
 function loadVercelCredentials() {
-  try {
-    const { token } = JSON.parse(
-      readFileSync(
-        resolve(homedir(), 'Library/Application Support/com.vercel.cli/auth.json'),
-        'utf8',
-      ),
-    );
-    const { projectId, orgId } = JSON.parse(
-      readFileSync(resolve(ROOT, '.vercel/project.json'), 'utf8'),
-    );
-    return { token, projectId, orgId };
-  } catch {
-    throw Object.assign(
-      new Error(
-        'Vercel credentials not found. Remediation: run `npx vercel login` and `npx vercel link` from the repo root.',
-      ),
-      { harness: true },
-    );
-  }
+  return loadVercelAuth(ROOT);
 }
 
 async function latestDeployment({ token, projectId, orgId }, { target, branch }) {
@@ -78,6 +67,31 @@ function describeDeployment(d) {
 async function main() {
   const failures = [];
   const creds = loadVercelCredentials();
+
+  // 0. Auth + required env presence (names only — values stay encrypted)
+  await assertVercelToken(creds.token);
+  console.log('PASS Vercel token');
+  const envNames = await listVercelEnvNames(creds);
+  for (const key of REQUIRED_ENV) {
+    for (const target of ['preview', 'production']) {
+      const hit = envNames.some((item) => item.key === key && item.targets.includes(target));
+      if (hit) {
+        console.log(`PASS env ${key} (${target}) present`);
+      } else {
+        // OPENAI is optional if DEFAULT_AI_MODEL is anthropic-only; warn not fail.
+        if (key === 'OPENAI_API_KEY') {
+          console.log(
+            `WARN env ${key} (${target}) absent — required when DEFAULT_AI_MODEL uses openai:`,
+          );
+        } else {
+          failures.push(`env ${key} missing on ${target}`);
+          console.log(
+            `FAIL env ${key} (${target}) absent. Remediation: pnpm secrets:sync -- --all && pnpm db:provision-worker && pnpm redeploy:env`,
+          );
+        }
+      }
+    }
+  }
 
   // 1. Deployment states
   for (const [label, query] of [

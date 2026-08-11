@@ -75,7 +75,27 @@ const module = await Test.createTestingModule({
 Use `@testing-library/react` with jsdom. Assert on visible behavior:
 screen queries, user events, navigation. No snapshot tests.
 
-## 9) Definition of Done
+## 9) Ops / deployment harnesses
+
+These are not unit tests; they are agent-facing scripts under `harness/` that
+prevent re-inventing bootstrap and release checks. They must never print secret
+values (Keychain / `.env` / Vercel / GitHub env only).
+
+| Command                      | Purpose                                                                   |
+| ---------------------------- | ------------------------------------------------------------------------- |
+| `pnpm secrets:check`         | Presence of Keychain services, local env keys, Vercel/GitHub env names    |
+| `pnpm secrets:sync -- --all` | Sync OpenAI, CRON, models from Keychain → `.env` + Vercel (+ GH for cron) |
+| `pnpm check:openai`          | HTTP smoke of Keychain OpenAI keys                                        |
+| `pnpm db:provision-worker`   | Enable `worker_user` login; set `NEON_WORKER_DATABASE_URL`                |
+| `pnpm redeploy:env`          | Redeploy latest Production + Preview after env edits                      |
+| `pnpm check:branch-sync`     | Compare local / `origin/staging` / `origin/main` tips                     |
+| `pnpm validate:deploy`       | Vercel auth + required env names + READY deploys + HTTP/visual            |
+| `pnpm bench:triage`          | Single model/stack triage accuracy/cost run                               |
+| `pnpm bench:triage:matrix`   | Small frozen-prompt matrix; logs in `harness/artifacts/`                  |
+
+See `ARCHITECTURE.md` § Environment Bootstrap and the `/release` skill Phase 0.
+
+## 10) Definition of Done
 
 1. implementation complete
 2. tests added in separate pass

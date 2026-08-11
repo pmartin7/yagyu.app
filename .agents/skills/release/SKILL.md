@@ -11,6 +11,31 @@ yagyu.app + Neon `production`.
 Never skip a gate because the change "looks small". The whole value of this
 workflow is that production is the last thing to see a change, not the first.
 
+## Phase 0 — Preflight (auth, secrets, plan limits)
+
+```bash
+npx vercel whoami          # must succeed; else `npx vercel login`
+pnpm secrets:check         # names only — Keychain, .env, Vercel, GitHub env
+pnpm check:branch-sync     # optional context: where tips diverge
+```
+
+Stop if Vercel auth is stale — `pnpm validate:deploy` cannot talk to the API
+without it.
+
+If this change adds Neon roles, cron auth, or AI provider keys:
+
+```bash
+pnpm secrets:sync -- --all          # OpenAI + CRON + models (from Keychain)
+pnpm db:provision-worker            # worker_user login + NEON_WORKER_DATABASE_URL
+pnpm redeploy:env                   # env edits do not refresh running deploys
+```
+
+Never commit secrets. Never put `CRON_SECRET` or DB passwords in the git repo —
+only in Keychain, Vercel env, and GitHub **environment** secrets.
+
+Deploy failure class to remember: Hobby Vercel rejects sub-daily `vercel.json`
+crons at deploy time. Keep drains in `.github/workflows/email-sync-drain.yml`.
+
 ## Phase 1 — Validate locally
 
 ```bash
@@ -36,8 +61,10 @@ Check, and say what you checked:
 - no secrets — `.env`, service-account JSON, tokens, private keys
 - no debug leftovers — `console.log`, commented-out code, `.only` in tests
 - no stray artifacts — screenshots, scratch files, backups
-- migrations: if `apps/api/src/migrations/` gained a file, say so explicitly. It
-  will run against staging on push and against **production** on merge.
+- migrations: if `apps/api/migrations/` gained a file, say so explicitly. It
+  will run against staging on push and against **production** on merge. After
+  migrate, confirm `pnpm db:provision-worker` is still satisfied (role login is
+  not created by the migration alone).
 
 ## Phase 3 — Commit onto staging
 
@@ -98,7 +125,7 @@ production, so a broken one must be fixed before promotion, not after.
 ## Phase 5 — Verify the staging deployment
 
 ```bash
-pnpm validate:deploy  # needs full permissions
+pnpm validate:deploy  # needs full permissions; preflights Vercel auth + env names
 ```
 
 Confirms the Vercel deployments are `READY` and the live site serves the app.
@@ -123,6 +150,7 @@ Watch `ci.yml` and `migrate.yml` on `main` the same way, then:
 
 ```bash
 pnpm validate:deploy
+pnpm check:branch-sync
 ```
 
 Open `harness/artifacts/deployment-production.png` and actually look at it. This is

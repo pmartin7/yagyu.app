@@ -76,5 +76,10 @@ Apply the ai-engineer's edits before landing anything.
   Invariants for rules like prompt-prefix stability), and `.env.example` if
   `DEFAULT_AI_MODEL` or new config vars changed
 - Keep the benchmark harness and its pnpm script — it is the regression net
-  for the next model release, not a one-off
+  for the next model release, not a one-off. For multi-stack sweeps use
+  `pnpm bench:triage:matrix` (logs under `harness/artifacts/`, gitignored).
+- Production structured generation goes through `AiService.generateStructured`
+  (AI SDK `generateObject`). Zod + AI SDK v7 can hit TS2589; keep the cast
+  boundary inside `AiService` so the bench and API share one call path — do
+  not invent a second generate helper in the harness.
 - Report the before/after table in your summary

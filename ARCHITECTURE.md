@@ -252,6 +252,35 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - Model changes are stage-local and prompt-frozen: evaluate a candidate through
   `bench:triage` before changing that stage's prompt or generation settings.
   Any prompt or generation-config change must bump that stage's prompt version.
+- A green migration does not finish runtime bootstrap: roles created as
+  `NOLOGIN` (e.g. `worker_user`) still need a one-time login password and
+  `NEON_WORKER_DATABASE_URL` via `pnpm db:provision-worker`.
+- Sub-daily schedules must not be added to `vercel.json` while the project is
+  on a Hobby plan — Hobby rejects those crons at deploy time. Use
+  `.github/workflows/email-sync-drain.yml` instead.
+- Vercel environment variable edits do not refresh running deployments; run
+  `pnpm redeploy:env` after `pnpm secrets:sync` / `pnpm db:provision-worker`.
+- Operational secrets are never committed. Agents store them in macOS Keychain
+  (account `yagyu`, service names in `.env.example`) and sync with
+  `pnpm secrets:sync` into local `.env` (gitignored), Vercel env vars, and
+  GitHub **environment** secrets — not repository secrets that land in git.
+
+### Environment Bootstrap
+
+After cloning or after a migration that adds DB roles / sync secrets, each
+environment needs these once (dev locally; Preview≈staging; Production≈main):
+
+| Concern                     | Harness                                    | Where the secret lives                  |
+| --------------------------- | ------------------------------------------ | --------------------------------------- |
+| OpenAI keys + stage models  | `pnpm secrets:sync -- --openai --models`   | Keychain → `.env` + Vercel              |
+| Cron bearer for sync drain  | `pnpm secrets:sync -- --cron`              | Keychain → `.env` + Vercel + GitHub env |
+| `worker_user` login + URL   | `pnpm db:provision-worker`                 | Keychain → `.env` + Vercel              |
+| Apply new Vercel env values | `pnpm redeploy:env`                        | —                                       |
+| Verify presence (no values) | `pnpm secrets:check` / `pnpm check:openai` | —                                       |
+| Git tip alignment           | `pnpm check:branch-sync`                   | —                                       |
+
+Schema migrate (`pnpm migrate:up` / `migrate.yml`) is necessary but not
+sufficient for the worker URL or `CRON_SECRET`.
 
 ### Row-Level Security
 
@@ -271,6 +300,9 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   `NEON_APP_DATABASE_URL` (pooled host on Vercel, direct locally). Table
   grants for future tables are covered by default privileges; new user-owned
   tables only need ENABLE RLS + a policy in their migration.
+- `worker_user` is created `NOLOGIN NOBYPASSRLS` by migration. Provision login
+  and `NEON_WORKER_DATABASE_URL` with `pnpm db:provision-worker` (never commit
+  the password). Prefer pooled hosts on Vercel; direct hosts locally.
 - Transaction-per-request pins a pooled connection for the request duration.
   Future streaming/SSE endpoints (e.g. AI chat) must opt out of the
   interceptor, or they would hold a transaction open for the whole stream.

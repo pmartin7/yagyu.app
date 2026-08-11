@@ -11,7 +11,14 @@
     "docs:check": "node harness/check-docs-sync.mjs",
     "validate:local": "node harness/validate-local.mjs",
     "validate:deploy": "node harness/validate-deployment.mjs",
+    "check:branch-sync": "node harness/check-branch-sync.mjs",
+    "check:openai": "node harness/check-openai.mjs",
+    "secrets:sync": "node harness/sync-secrets.mjs",
+    "secrets:check": "node harness/sync-secrets.mjs --check",
+    "db:provision-worker": "node harness/provision-worker-db.mjs",
+    "redeploy:env": "node harness/redeploy-env.mjs",
     "bench:triage": "pnpm --filter @morpheus/shared build && pnpm --filter @morpheus/api build && node harness/bench-triage.mjs",
+    "bench:triage:matrix": "node harness/bench-triage-matrix.mjs",
     "playwright:install": "node harness/install-browsers.mjs",
     "test": "turbo test",
     "format": "prettier --write .",
@@ -26,6 +33,7 @@
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "pg": "^8.16.3",
     "playwright": "^1.61.1",
     "prettier": "^3.0.0",
     "turbo": "^2.0.0"
