@@ -10,7 +10,7 @@ export class TaskNextStep extends BaseEntity {
   @Property()
   title!: string;
 
-  @Property({ nullable: true })
+  @Property({ type: 'datetime', nullable: true })
   completedAt: Date | null = null;
 
   @Property({ default: 0 })

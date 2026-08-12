@@ -257,6 +257,11 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   The first manual rank write permanently switches that category's
   `rankingMode` from `ai` to `manual`.
 - Task notes are append-only and trigger targeted reanalysis.
+- Nullable MikroORM `Date` columns must declare an explicit datetime type
+  (e.g. `@Property({ type: 'datetime', nullable: true })`). A bare
+  `Date | null` property does not emit Date metadata, so non-null
+  timestamptz values hydrate as strings and `.toISOString()` throws after
+  the first write (seen on `TaskNextStep.completedAt`).
 - A note-triggered `reanalyze` job invokes Writer directly for its task. It does
   not re-screen mail or ask Router to change task/category/link structure.
 - Router owns structure (categories, tasks, links); Writer owns task content
