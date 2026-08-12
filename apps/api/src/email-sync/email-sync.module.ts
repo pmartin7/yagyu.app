@@ -23,9 +23,15 @@ let workerOrmPromise: Promise<MikroORM> | undefined;
 
 const workerEntityManagerProvider: WorkerEntityManagerProvider = {
   async getWorkerEm(): Promise<EntityManager> {
-    workerOrmPromise ??= MikroORM.init(buildOrmConfig(process.env['NEON_WORKER_DATABASE_URL'], 1));
+    // contextName must not be 'default' — Nest's RequestContext binds the
+    // app EM under that name, and orm.em.fork() would then inherit the
+    // app_user driver (RLS, zero rows) instead of worker_user.
+    workerOrmPromise ??= MikroORM.init({
+      ...buildOrmConfig(process.env['NEON_WORKER_DATABASE_URL'], 1),
+      contextName: 'worker',
+    });
     const orm = await workerOrmPromise;
-    return orm.em.fork() as EntityManager;
+    return orm.em.fork({ disableContextResolution: true }) as EntityManager;
   },
 };
 

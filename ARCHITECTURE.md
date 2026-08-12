@@ -262,6 +262,10 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   only `max: 1` leaves Knex/Tarn's default `min: 2`, and init throws
   `opt.max is smaller than opt.min` before any sync job runs — so the GitHub
   drain returns 500 and no mail is ever pulled.
+- The worker ORM must use `contextName: 'worker'` (not `default`). Nest binds
+  the app EM in RequestContext under `default`; a second ORM that shares that
+  name makes `orm.em.fork()` inherit the `app_user` driver, so RLS hides every
+  row and sync reports `accountsQueued: 0` with jobs never claimed.
 
 - Nest API dist is CommonJS (required by `api/index.js` on Vercel). Packages
   that are ESM-only (`ai`, `@ai-sdk/*`) must be loaded through `importEsm()`
