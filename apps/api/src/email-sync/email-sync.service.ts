@@ -69,7 +69,24 @@ export class EmailSyncService {
 
   async enqueueScheduledSyncs(): Promise<number> {
     const em = await this.workerProvider.getWorkerEm();
+    const session = (await em.execute(
+      `select current_user as db_user, inet_server_addr()::text as addr`,
+    )) as Array<{ db_user: string; addr: string | null }>;
     const accounts = await em.findAll(EmailAccount);
+    this.logger.log(
+      {
+        dbUser: session[0]?.db_user,
+        accountCount: accounts.length,
+        workerUrlHost: (() => {
+          try {
+            return new URL(process.env['NEON_WORKER_DATABASE_URL'] ?? '').hostname;
+          } catch {
+            return null;
+          }
+        })(),
+      },
+      'enqueueScheduledSyncs worker session',
+    );
     const pollWindow = Math.floor(Date.now() / 600_000);
     await Promise.all(
       accounts.map((account) =>
