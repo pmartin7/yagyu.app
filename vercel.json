@@ -5,7 +5,7 @@
   "outputDirectory": "apps/web/dist",
   "functions": {
     "api/index.js": {
-      "maxDuration": 30,
+      "maxDuration": 250,
       "includeFiles": "{node_modules/@ai-sdk/**,node_modules/ai/**,node_modules/zod/**,node_modules/eventsource-parser/**,node_modules/json-schema/**,node_modules/@standard-schema/**,node_modules/@workflow/**,node_modules/undici/**,node_modules/@vercel/oidc/**}"
     }
   },

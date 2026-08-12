@@ -8,7 +8,7 @@ import { EmailMessage } from './entities/email-message.entity.js';
 import { SyncJob, type SyncJobCheckpoint, type SyncJobKind } from './entities/sync-job.entity.js';
 
 const BACKFILL_DAYS = 60;
-/** Keep pages small so sequential messages.get stays under the 30s function limit. */
+/** Keep pages small so sequential messages.get stays under function maxDuration. */
 const GMAIL_PAGE_SIZE = 10;
 const MAX_JOBS_PER_DRAIN = 1;
 const MAX_JOB_ATTEMPTS = 5;

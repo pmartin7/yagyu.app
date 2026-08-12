@@ -252,7 +252,8 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - An email-account cursor advances only in the transaction that persisted the
   corresponding message batch.
 - Worker claims commit their lease before work begins; every batch checkpoints
-  under the 30-second function limit and must be safe to resume.
+  under the configured function `maxDuration` (`250` in `vercel.json`; Hobby
+  ceiling `300`) and must be safe to resume.
 - AI never reopens a user-completed task or overwrites a user-managed field.
   The first manual rank write permanently switches that category's
   `rankingMode` from `ai` to `manual`.
@@ -307,9 +308,9 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   `api/index.js` with a path into `apps/api` — that layout is absent in
   `/var/task` and crashes cold start.
 - Gmail list pages used by the worker stay small (≈10 ids). Sequential
-  `messages.get` for a 50-id page routinely exceeds the 30s function budget;
-  the GitHub drain's `curl -f` can then mark the Actions run failed on gateway
-  504 even when the function persisted progress — jobs are durable and the next
+  `messages.get` for a large page can still burn most of the function budget;
+  the GitHub drain's `curl -f` can mark the Actions run failed on gateway 504
+  even when the function persisted progress — jobs are durable and the next
   drain resumes.
 - Sub-daily sync schedule must not live in `vercel.json` on Hobby; Hobby
   rejects those crons at deploy time. Keep the schedule in
