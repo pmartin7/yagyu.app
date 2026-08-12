@@ -266,6 +266,10 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   the app EM in RequestContext under `default`; a second ORM that shares that
   name makes `orm.em.fork()` inherit the `app_user` driver, so RLS hides every
   row and sync reports `accountsQueued: 0` with jobs never claimed.
+- Gmail `messages.get` for a sync page must be sequential (or tightly
+  rate-limited). A `Promise.all` over a page of ids bursts past the per-user
+  quota and leaves the backfill job retrying on `429` with zero messages
+  persisted.
 
 - Nest API dist is CommonJS (required by `api/index.js` on Vercel). Packages
   that are ESM-only (`ai`, `@ai-sdk/*`) must be loaded through `importEsm()`

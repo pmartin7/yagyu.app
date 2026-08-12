@@ -188,7 +188,7 @@ export class EmailSyncService {
       typeof job.checkpoint['pageToken'] === 'string' ? job.checkpoint['pageToken'] : null;
     const after = new Date(Date.now() - BACKFILL_DAYS * 24 * 60 * 60 * 1000);
     const page = await gmail.listMessages(after, pageToken);
-    const messages = await Promise.all(page.messageIds.map((id) => gmail.getMessage(id)));
+    const messages = await this.fetchMessages(gmail, page.messageIds);
     const cursor = this.latestHistoryId(messages, job.emailAccount.syncCursor);
     await this.persistMessageBatch(job, messages, cursor, page.nextPageToken);
   }
@@ -206,7 +206,7 @@ export class EmailSyncService {
       const startCursor =
         typeof job.checkpoint['startCursor'] === 'string' ? job.checkpoint['startCursor'] : cursor;
       const page = await gmail.listHistory(startCursor, pageToken);
-      const messages = await Promise.all(page.messageIds.map((id) => gmail.getMessage(id)));
+      const messages = await this.fetchMessages(gmail, page.messageIds);
       await this.persistMessageBatch(
         job,
         messages,
@@ -218,6 +218,15 @@ export class EmailSyncService {
       if (!(error instanceof GmailHistoryExpiredError)) throw error;
       await this.completeAndFallbackToBackfill(job);
     }
+  }
+
+  /** Sequential fetches — parallel `messages.get` bursts trip Gmail per-user 429s. */
+  private async fetchMessages(gmail: GmailClient, messageIds: string[]): Promise<GmailMessage[]> {
+    const messages: GmailMessage[] = [];
+    for (const id of messageIds) {
+      messages.push(await gmail.getMessage(id));
+    }
+    return messages;
   }
 
   private async persistMessageBatch(
