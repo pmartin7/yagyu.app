@@ -291,12 +291,13 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   rewrite). A static import — or a source-level `import()` that CommonJS emit
   turns into `require()` — crashes every cold start with `ERR_REQUIRE_ESM` /
   `FUNCTION_INVOCATION_FAILED`, including `/api/health`.
-- Vercel NFT cannot see `importEsm`'s `new Function` import, so `ai` /
-  `@ai-sdk/*` must be listed in `vercel.json`
-  `functions["api/index.js"].includeFiles`. Do not `require.resolve` them
-  from `api/index.js` — that path layout is absent in `/var/task` and crashes
-  every cold start. Without the include, analyze fails with
-  `Cannot find package '@ai-sdk/…'`.
+- Vercel NFT cannot see `importEsm`'s `new Function` import, so
+  `vercel.json` `functions["api/index.js"].includeFiles` must cover
+  `apps/api/node_modules/**` plus the pnpm store entries for `ai`,
+  `@ai-sdk/*`, and `zod` (transitive). Do not `require.resolve` those
+  packages from `api/index.js` — that path layout is absent in `/var/task`
+  and crashes every cold start. Without the include, analyze fails with
+  missing `@ai-sdk/…` or `zod/v4`.
 - Gmail list pages used by the worker stay small (≈10 ids). Sequential
   `messages.get` for a 50-id page routinely exceeds the 30s function budget;
   the GitHub drain's `curl -f` can then mark the Actions run failed on gateway

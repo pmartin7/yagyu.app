@@ -6,7 +6,7 @@
   "functions": {
     "api/index.js": {
       "maxDuration": 30,
-      "includeFiles": "{apps/api/node_modules/@ai-sdk/**,apps/api/node_modules/ai/**,node_modules/.pnpm/@ai-sdk+*/**,node_modules/.pnpm/ai@*/**}"
+      "includeFiles": "{apps/api/node_modules/**,node_modules/.pnpm/@ai-sdk*/**,node_modules/.pnpm/ai@*/**,node_modules/.pnpm/zod@*/**}"
     }
   },
   "redirects": [
