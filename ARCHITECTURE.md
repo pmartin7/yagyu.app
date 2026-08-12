@@ -291,14 +291,16 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   rewrite). A static import — or a source-level `import()` that CommonJS emit
   turns into `require()` — crashes every cold start with `ERR_REQUIRE_ESM` /
   `FUNCTION_INVOCATION_FAILED`, including `/api/health`.
-- Vercel NFT cannot see `importEsm`'s `new Function` import. `api/index.js`
-  loads `api/ai-sdk-pins.cjs` inside try/catch (pin failures must not take
-  down `/api/health`) and `vercel.json` `includeFiles` covers
-  `apps/api/node_modules/**` + `node_modules/.pnpm/**`. pnpm nested
-  symlinks can still break `zod/v4` under `@ai-sdk/provider-utils` at
-  runtime — if analyze keeps missing modules, switch the install to a
-  hoisted linker rather than resolving packages from `api/index.js`
-  (that path layout is absent in `/var/task` and crashes cold start).
+- Vercel NFT cannot see `importEsm`'s `new Function` import. Root `.npmrc`
+  sets `node-linker=hoisted` so AI SDK packages are real `node_modules`
+  entries (isolated pnpm nested symlinks break `zod/v4` /
+  `eventsource-parser` under `@ai-sdk/provider-utils` in `/var/task`).
+  `importEsm` resolves via `createRequire` then native-imports the file URL;
+  `api/index.js` loads `api/ai-sdk-pins.cjs` inside try/catch (pin failures
+  must not take down `/api/health`); `vercel.json` `includeFiles` covers the
+  hoisted AI SDK roots. Do not `require.resolve` those packages from
+  `api/index.js` with a path into `apps/api` — that layout is absent in
+  `/var/task` and crashes cold start.
 - Gmail list pages used by the worker stay small (≈10 ids). Sequential
   `messages.get` for a 50-id page routinely exceeds the 30s function budget;
   the GitHub drain's `curl -f` can then mark the Actions run failed on gateway

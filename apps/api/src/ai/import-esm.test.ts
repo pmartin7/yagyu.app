@@ -17,4 +17,11 @@ describe('importEsm', () => {
     expect(source).not.toMatch(/^import\s+(?!type\b).*\bfrom ['"]ai['"]/m);
     expect(source).toContain('importEsm');
   });
+
+  it('resolves the specifier before native import (hoisted /var/task layout)', () => {
+    const source = readFileSync(resolve(__dirname, 'import-esm.ts'), 'utf8');
+    expect(source).toContain('createRequire');
+    expect(source).toContain('pathToFileURL');
+    expect(source).toContain('requireFromHere.resolve');
+  });
 });
