@@ -191,11 +191,14 @@ One Neon Postgres project with three database branches mirroring the git flow:
 - GitHub Actions (`.github/workflows/email-sync-drain.yml`) invokes
   `GET /api/internal/sync/run` every 10 minutes against staging and production,
   authenticating with each environment's `CRON_SECRET`. Authenticated
-  self-chaining uses POST. Both hand bounded drain work to Vercel `waitUntil`
-  before returning. Do not put a sub-daily schedule in `vercel.json` while the
-  project is on a Hobby plan — Hobby rejects those crons at deploy time. Gmail
-  push additionally requires `GOOGLE_PUBSUB_TOPIC` and a push subscription whose
-  OIDC identity matches `PUBSUB_PUSH_SERVICE_ACCOUNT`.
+  self-chaining uses POST. The cron/self-chain handlers await the first bounded
+  drain batch before returning (waitUntil alone was freezing the Express/Hobby
+  isolate with jobs still unclaimed). Pub/Sub notification intake may still
+  schedule follow-up drain via `waitUntil`. Do not put a sub-daily schedule in
+  `vercel.json` while the project is on a Hobby plan — Hobby rejects those
+  crons at deploy time. Gmail push additionally requires `GOOGLE_PUBSUB_TOPIC`
+  and a push subscription whose OIDC identity matches
+  `PUBSUB_PUSH_SERVICE_ACCOUNT`.
 - `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
   permanently redirected to `yagyu.app`. The authoritative redirect is the
   **project domain redirect** (`redirect=yagyu.app`, status 308) — the same

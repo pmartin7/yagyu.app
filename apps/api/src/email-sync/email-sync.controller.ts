@@ -89,12 +89,11 @@ export class EmailSyncController {
     const accountsQueued = await this.emailSyncService.enqueueScheduledSyncs();
     const protocol = String(request.headers['x-forwarded-proto'] ?? request.protocol);
     const selfChainUrl = `${protocol}://${request.get('host')}/api/internal/sync/run`;
-    this.schedule(
-      request,
-      this.emailSyncService
-        .renewExpiringWatches()
-        .then(() => this.emailSyncService.drainBounded({ selfChainUrl })),
-    );
+    // Await the first bounded batch. Relying only on waitUntil left pending
+    // jobs unclaimed on the Express/Hobby path (response returned, isolate
+    // froze, attempts stayed 0). Self-chain still continues remaining work.
+    await this.emailSyncService.renewExpiringWatches();
+    await this.emailSyncService.drainBounded({ selfChainUrl });
     return { accepted: true, accountsQueued };
   }
 
