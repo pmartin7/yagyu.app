@@ -167,7 +167,7 @@ One Neon Postgres project with three database branches mirroring the git flow:
   environments.
 - Vercel runtime uses a **pooled** `NEON_APP_DATABASE_URL` (`-pooler` host);
   migrations use the **direct** owner `NEON_DATABASE_URL`.
-- Background sync and triage lazily open a pool-max-1
+- Background sync and triage lazily open a pool `{ min: 0, max: 1 }`
   `NEON_WORKER_DATABASE_URL` connection as `worker_user`. Ordinary user traffic
   never initializes this connection. The migration creates `worker_user` as
   `NOLOGIN NOBYPASSRLS`; each environment must run
@@ -255,6 +255,11 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
 - A green migration does not finish runtime bootstrap: roles created as
   `NOLOGIN` (e.g. `worker_user`) still need a one-time login password and
   `NEON_WORKER_DATABASE_URL` via `pnpm db:provision-worker`.
+- Worker MikroORM pool config must set `{ min: 0, max: 1 }` together. Setting
+  only `max: 1` leaves Knex/Tarn's default `min: 2`, and init throws
+  `opt.max is smaller than opt.min` before any sync job runs — so the GitHub
+  drain returns 500 and no mail is ever pulled.
+
 - Nest API dist is CommonJS (required by `api/index.js` on Vercel). Packages
   that are ESM-only (`ai`, `@ai-sdk/*`) must be loaded through `importEsm()`
   in `apps/api/src/ai/import-esm.ts` (a native dynamic `import` that tsc cannot

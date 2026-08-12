@@ -22,7 +22,10 @@ export function buildOrmConfig(
     // passed to the pg driver explicitly or Neon rejects the connection.
     driverOptions: {
       ...(clientUrl?.includes('sslmode=require') ? { connection: { ssl: true } } : {}),
-      ...(poolMax ? { pool: { max: poolMax } } : {}),
+      // Knex/Tarn defaults min to 2; setting only max:1 throws
+      // "opt.max is smaller than opt.min" before any query. Serverless
+      // worker connections use pool-max-1 with min:0 so no idle client is held.
+      ...(poolMax ? { pool: { min: 0, max: poolMax } } : {}),
     },
     // Entities are registered statically (no filesystem glob discovery):
     // Vercel's bundler only includes files reachable through imports, so a
