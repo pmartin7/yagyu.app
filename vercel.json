@@ -5,8 +5,7 @@
   "outputDirectory": "apps/web/dist",
   "functions": {
     "api/index.js": {
-      "maxDuration": 30,
-      "includeFiles": "{apps/api/node_modules/**,node_modules/.pnpm/**}"
+      "maxDuration": 30
     }
   },
   "redirects": [

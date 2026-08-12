@@ -291,13 +291,12 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   rewrite). A static import — or a source-level `import()` that CommonJS emit
   turns into `require()` — crashes every cold start with `ERR_REQUIRE_ESM` /
   `FUNCTION_INVOCATION_FAILED`, including `/api/health`.
-- Vercel NFT cannot see `importEsm`'s `new Function` import, so
-  `vercel.json` `functions["api/index.js"].includeFiles` must cover
-  `apps/api/node_modules/**` and `node_modules/.pnpm/**` (AI SDK pulls
-  many transitive ESM packages). Do not `require.resolve` those packages
-  from `api/index.js` — that path layout is absent in `/var/task` and
-  crashes every cold start. Narrow globs leave analyze failing on the next
-  missing transitive (`zod/v4`, `eventsource-parser`, …).
+- Vercel NFT cannot see `importEsm`'s `new Function` import. Pin the AI
+  SDK graph from `api/ai-sdk-pins.cjs` via `createRequire(apps/api/package.json).resolve(...)`
+  (required by `api/index.js`). Do not use `require.resolve(id, { paths })`
+  — NFT ignores that form and the packages never land in `/var/task`. Do not
+  rely on broad `includeFiles` globs alone; pnpm nested symlinks (`zod/v4`
+  under `@ai-sdk/provider-utils`) still break at runtime.
 - Gmail list pages used by the worker stay small (≈10 ids). Sequential
   `messages.get` for a 50-id page routinely exceeds the 30s function budget;
   the GitHub drain's `curl -f` can then mark the Actions run failed on gateway
