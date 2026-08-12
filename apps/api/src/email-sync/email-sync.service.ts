@@ -8,6 +8,8 @@ import { EmailMessage } from './entities/email-message.entity.js';
 import { SyncJob, type SyncJobCheckpoint, type SyncJobKind } from './entities/sync-job.entity.js';
 
 const BACKFILL_DAYS = 60;
+/** Keep pages small so sequential messages.get stays under the 30s function limit. */
+const GMAIL_PAGE_SIZE = 10;
 const MAX_JOBS_PER_DRAIN = 1;
 const MAX_JOB_ATTEMPTS = 5;
 const JOB_LEASE_SECONDS = 90;
@@ -187,7 +189,7 @@ export class EmailSyncService {
     const pageToken =
       typeof job.checkpoint['pageToken'] === 'string' ? job.checkpoint['pageToken'] : null;
     const after = new Date(Date.now() - BACKFILL_DAYS * 24 * 60 * 60 * 1000);
-    const page = await gmail.listMessages(after, pageToken);
+    const page = await gmail.listMessages(after, pageToken, GMAIL_PAGE_SIZE);
     const messages = await this.fetchMessages(gmail, page.messageIds);
     const cursor = this.latestHistoryId(messages, job.emailAccount.syncCursor);
     await this.persistMessageBatch(job, messages, cursor, page.nextPageToken);
@@ -205,7 +207,7 @@ export class EmailSyncService {
     try {
       const startCursor =
         typeof job.checkpoint['startCursor'] === 'string' ? job.checkpoint['startCursor'] : cursor;
-      const page = await gmail.listHistory(startCursor, pageToken);
+      const page = await gmail.listHistory(startCursor, pageToken, GMAIL_PAGE_SIZE);
       const messages = await this.fetchMessages(gmail, page.messageIds);
       await this.persistMessageBatch(
         job,

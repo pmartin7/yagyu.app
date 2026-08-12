@@ -123,8 +123,10 @@ through its linked tasks.
 ```
 Auth:   Client → Firebase SDK → JWT → API Guard → email_verified check →
         RLS interceptor (tx + set_config) → getOrCreate User
-Sync:   Gmail Pub/Sub push OR 10-minute GitHub Actions drain → idempotent SyncJob →
-        leased worker batch → Gmail REST → EmailMessage rows + syncCursor
+Sync:   Gmail Pub/Sub push OR timer poke → GET/POST /api/internal/sync/run
+        (CRON_SECRET) → enqueue due syncs → claim/lease SyncJob batch →
+        Gmail REST → EmailMessage rows + syncCursor → later analyze jobs;
+        Nest self-chains while work remains
 Triage: analyze/reanalyze SyncJob → parallel per-email Screeners →
         one structure-only Router per actionable slice →
         parallel per-touched-task Writers → deterministic category Ranker
@@ -134,9 +136,13 @@ Tasks:  Web → /api/tasks + /api/categories → RLS-bound TasksService →
 
 The same Postgres ledger owns sync and triage work. A claim commits a 90-second
 lease before external work starts; each bounded batch persists a checkpoint.
-The cron drain self-chains while ready jobs remain. Gmail history expiry falls
+The drain self-chains while ready jobs remain. On Hobby, the timer is GitHub
+Actions (`.github/workflows/email-sync-drain.yml`) — a temporary workaround
+because Hobby rejects sub-daily crons in `vercel.json`; GitHub only pokes the
+endpoint and never talks to Gmail or Neon. Preferred at scale: Vercel Cron on a
+paid plan, then remove or slim the GitHub workflow. Gmail history expiry falls
 back to a bounded 60-day resync. Pub/Sub is optional: without its configuration,
-the cron remains a complete polling path.
+the scheduled drain remains a complete polling path.
 
 The triage prompts are separate, versioned modules with a static system-prefix
 followed by variable context. Each agent resolves its model independently:
@@ -188,16 +194,24 @@ One Neon Postgres project with three database branches mirroring the git flow:
   `index.html` (SPA fallback). ORM entities are registered statically in
   `mikro-orm.config.ts` — the function bundler only includes files reachable
   through imports, so glob discovery must not be reintroduced.
-- GitHub Actions (`.github/workflows/email-sync-drain.yml`) invokes
-  `GET /api/internal/sync/run` every 10 minutes against staging and production,
-  authenticating with each environment's `CRON_SECRET`. Authenticated
-  self-chaining uses POST. The cron/self-chain handlers await the first bounded
-  drain batch before returning (waitUntil alone was freezing the Express/Hobby
-  isolate with jobs still unclaimed). Pub/Sub notification intake may still
-  schedule follow-up drain via `waitUntil`. Do not put a sub-daily schedule in
-  `vercel.json` while the project is on a Hobby plan — Hobby rejects those
-  crons at deploy time. Gmail push additionally requires `GOOGLE_PUBSUB_TOPIC`
-  and a push subscription whose OIDC identity matches
+- Email sync drain schedule (temporary Hobby workaround): Vercel Hobby rejects
+  sub-daily crons in `vercel.json` at deploy time, so the schedule lives in
+  `.github/workflows/email-sync-drain.yml` (`*/10 * * * *` +
+  `workflow_dispatch`). GitHub is only the timer — it authenticates with each
+  environment's `CRON_SECRET` and GETs
+  `https://staging.yagyu.app/api/internal/sync/run` /
+  `https://yagyu.app/api/internal/sync/run`. Nest enqueues due syncs,
+  claims/leases `SyncJob`s, processes a bounded batch (Gmail → messages →
+  later analyze), and self-chains with authenticated POST while work remains.
+  Cron/self-chain handlers await the first bounded drain before returning
+  (waitUntil alone froze the Express/Hobby isolate with jobs still unclaimed).
+  Pub/Sub notification intake may still schedule follow-up drain via
+  `waitUntil`. The workflow's `curl -f` can mark the Actions run failed on a
+  gateway 504 even when the function already persisted progress; jobs are
+  durable and the next drain resumes. Preferred end state once on a paid Vercel
+  plan that allows the needed frequency: move the schedule to Vercel Cron and
+  remove or slim the GitHub workflow. Gmail push additionally requires
+  `GOOGLE_PUBSUB_TOPIC` and a push subscription whose OIDC identity matches
   `PUBSUB_PUSH_SERVICE_ACCOUNT`.
 - `yagyu.ai` and `www.yagyu.ai` are extra domains on the same Vercel project,
   permanently redirected to `yagyu.app`. The authoritative redirect is the
@@ -277,9 +291,20 @@ Mobile: Expo (EAS) — Android first, then iOS (separate release pipeline, post-
   rewrite). A static import — or a source-level `import()` that CommonJS emit
   turns into `require()` — crashes every cold start with `ERR_REQUIRE_ESM` /
   `FUNCTION_INVOCATION_FAILED`, including `/api/health`.
-- Sub-daily schedules must not be added to `vercel.json` while the project is
-  on a Hobby plan — Hobby rejects those crons at deploy time. Use
-  `.github/workflows/email-sync-drain.yml` instead.
+- `api/index.js` must `require.resolve` those same AI SDK packages (with
+  `paths` into `apps/api`). Vercel NFT cannot see `importEsm`'s
+  `new Function` import, so without the pin the packages are omitted from
+  `/var/task` and analyze jobs fail with `Cannot find package '@ai-sdk/…'`.
+- Gmail list pages used by the worker stay small (≈10 ids). Sequential
+  `messages.get` for a 50-id page routinely exceeds the 30s function budget;
+  the GitHub drain's `curl -f` can then mark the Actions run failed on gateway
+  504 even when the function persisted progress — jobs are durable and the next
+  drain resumes.
+- Sub-daily sync schedule must not live in `vercel.json` on Hobby; Hobby
+  rejects those crons at deploy time. Keep the schedule in
+  `.github/workflows/email-sync-drain.yml` as a temporary workaround until a
+  paid Vercel plan allows Vercel Cron at the needed frequency, then move the
+  schedule there and remove or slim the GitHub workflow.
 - Vercel environment variable edits do not refresh running deployments; run
   `pnpm redeploy:env` after `pnpm secrets:sync` / `pnpm db:provision-worker`.
 - Operational secrets are never committed. Agents store them in macOS Keychain

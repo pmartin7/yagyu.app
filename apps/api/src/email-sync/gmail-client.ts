@@ -123,11 +123,15 @@ export class GmailClient {
     };
   }
 
-  async listHistory(startHistoryId: string, pageToken: string | null): Promise<GmailHistoryPage> {
+  async listHistory(
+    startHistoryId: string,
+    pageToken: string | null,
+    maxResults = 10,
+  ): Promise<GmailHistoryPage> {
     const query = new URLSearchParams({
       startHistoryId,
       historyTypes: 'messageAdded',
-      maxResults: '50',
+      maxResults: String(maxResults),
     });
     if (pageToken) query.set('pageToken', pageToken);
     const response = await this.request<GmailHistoryResponse>(`/history?${query.toString()}`, true);
